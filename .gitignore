@@ -20,3 +20,6 @@ venv/
 .gateway-admin.json
 .aws-sam/
 .pytest_cache/
+
+# gateway operator secrets and issued run tokens
+.gateway-*

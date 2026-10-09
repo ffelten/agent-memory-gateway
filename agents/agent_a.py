@@ -27,7 +27,8 @@ def build_candidate(summary, incident):
 
 def run(client=None):
     client = client or GatewayClient(os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8808"),
-                                     os.environ.get("AGENT_A_TOKEN", "tok-alpha"))
+                                     os.environ.get("GATEWAY_TOKEN_ALPHA")
+                                     or os.environ.get("AGENT_A_TOKEN", "tok-alpha"))
     sources = {sid: client.get_source(sid) for sid in SOURCE_IDS}
     incident = FIX["incident"]
     runbook = sources["src-public-runbook"].get("text", "")
@@ -38,7 +39,10 @@ def run(client=None):
     candidate = build_candidate(resp["content"], incident)
     create_response = client.create_memory(candidate["title"], candidate["text"],
                                            "agent-a-" + uuid.uuid4().hex[:8])
-    return {"candidate": candidate, "create_response": create_response,
+    settled = create_response.get("state")
+    if settled in GatewayClient.PENDING_STATES and create_response.get("memory_id"):
+        settled = client.wait_until_settled(create_response["memory_id"])  # real gateway: async ingest
+    return {"candidate": candidate, "create_response": create_response, "settled_state": settled,
             "sources_fetched": {k: v.get("_status", 200) for k, v in sources.items()},
             "llm_stub": resp["_stub"]}
 
