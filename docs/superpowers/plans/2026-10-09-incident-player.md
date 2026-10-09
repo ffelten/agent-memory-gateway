@@ -21,7 +21,7 @@
 - [x] Author scenario.js and update README: window.INCIDENT_SCENARIO with skill {path,lines:[{text,poisoned}]}, candidate {title,text}, modes baseline/protected {title,steps:[{label,caption,focus,messages:[{lane,kind,title,text,tone}],memory,outcome?}]}. Messages accumulate through selected step. memory is full snapshot {candidate:absent|draft|stored|quarantined,privateRecord:boolean,publicRecord:boolean}. outcome {tone,title,text}. focus alpha|memory|beta. All text authored synthetic illustration.
 - [x] Replace index.html/styles.css/app.js with three persistent panes, step seek/play/pause, fresh replay mode reset, skill inspection and evidence dialogs. Timed playback stops at end; does not automatically enable protection. Use textContent for all scenario and evidence strings.
 - [x] Verify full baseline/protected traversal, mode reset, keyboard/dialog behavior, screenshots at desktop/mobile, file URL support, reduced motion, no overflow/errors/external API calls, metadata asset unchanged.
-- [ ] Review screenshots and truthfulness, resolve findings, update PR18, produce portable ZIP and open preview.
+- [x] Review screenshots and truthfulness, resolve findings, update PR18, produce portable ZIP and open preview.
 
 ## Acceptance
 
