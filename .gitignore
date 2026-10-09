@@ -17,3 +17,6 @@ venv/
 
 # installed agent skills (third-party)
 .agents/
+
+# gateway operator secrets and issued run tokens
+.gateway-*
