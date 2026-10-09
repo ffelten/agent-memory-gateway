@@ -12,4 +12,4 @@
 - [x] Build the four-scene standalone UI and sanitized evidence asset.
 - [x] Verify replay, chapter navigation, evidence drawer, keyboard access, mobile layout, and reduced motion in a browser; inspect screenshots. 78 browser checks passed on 1440×1000 and 390×844, including automatic stage scrolling and direct file loading.
 - [x] Run focused privacy and gateway regression checks; review the finished presentation independently. 192 gateway checks passed, one backend-specific skip; independent static review found no important issues.
-- [ ] Commit, publish the branch/PR, and provide a local working preview and handoff.
+- [x] Commit, publish the branch/PR, and provide a local working preview and handoff. PR #18: https://github.com/ffelten/agent-memory-gateway/pull/18. Open `presentation/index.html` directly; the five-file ZIP is in ignored `build/memory-gateway-presentation.zip`.
