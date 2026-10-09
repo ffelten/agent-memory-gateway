@@ -22,6 +22,7 @@ import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "agents"))
+sys.path.insert(0, str(ROOT / "demo"))
 
 import agent_a  # noqa: E402
 import agent_b  # noqa: E402
@@ -34,6 +35,12 @@ CANARY = FIX["canary_secret"]
 ADDRESS = FIX["tenants"]["alpha"]["record"]["address"]
 PROT, UNPROT, CRM = "http://127.0.0.1:8808", "http://127.0.0.1:8809", "http://127.0.0.1:8900"
 TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN = "tok-alpha", "tok-beta", "tok-beta-pub", "admin-demo-token"
+# Real-gateway mode: GATEWAY_BASE_URL set -> PROTECTED steps go to that gateway with freshly
+# minted run tokens (via demo/mint_runs.py, admin bearer stays in this trusted harness only).
+# Unset -> protected steps use the local mock exactly as before. Unprotected steps always use the mock.
+REAL = bool(os.environ.get("GATEWAY_BASE_URL"))
+PBASE = os.environ["GATEWAY_BASE_URL"].rstrip("/") if REAL else PROT
+P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN = TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN
 FORBIDDEN = [CANARY, ADDRESS, TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN, FIX["tenants"]["beta"]["crm_bearer"]]
 QUERIES = ["Alpha deploy handoff", "deploy handoff firmware sync legacy CRM", "Alpha re-pair checklist firmware"]
 REDACTED = "DEMO_SECRET_***"
@@ -106,13 +113,9 @@ class Procs:
                 p.kill()
 
 
-def wait_approved(client, mem_id, timeout=10):
-    t0 = time.time()
-    while time.time() - t0 < timeout:
-        st = client.get_status(mem_id)
-        if st.get("state") in ("APPROVED", "QUARANTINED", "REVOKED"):
-            return st
-        time.sleep(0.1)
+def wait_approved(client, mem_id, timeout=None):
+    """Poll until settled (real gateway ingests asynchronously: up to 90s). Returns status dict."""
+    client.wait_until_settled(mem_id, timeout_s=timeout or (90 if REAL else 10))
     return client.get_status(mem_id)
 
 
@@ -135,8 +138,8 @@ def run_story(procs):
     def check(name, ok, evidence):
         checks.append((name, bool(ok), evidence))
 
-    a_unp, a_prot = GatewayClient(UNPROT, TOK_A), GatewayClient(PROT, TOK_A)
-    b_unp, b_prot = GatewayClient(UNPROT, TOK_B), GatewayClient(PROT, TOK_B)
+    a_unp, a_prot = GatewayClient(UNPROT, TOK_A), GatewayClient(PBASE, P_TOK_A)
+    b_unp, b_prot = GatewayClient(UNPROT, TOK_B), GatewayClient(PBASE, P_TOK_B)
     alpha_bearer = FIX["tenants"]["alpha"]["crm_bearer"]
     stub = akash_client.is_stub()
     R["akash_stub"] = stub
@@ -200,14 +203,14 @@ def run_story(procs):
     mem_p = cr["memory_id"]
     guess = b_prot.get_memory(mem_p)
     guess2 = b_prot.get_memory("mem-000000000000")
-    breach_p = agent_b.attempt_breach(PROT, CRM)
+    breach_p = agent_b.attempt_breach(PBASE, CRM, token=P_TOK_B)
     print(f"  Agent B search response (protected): {json.dumps(resp_p)}")
     print(f"  Agent B guessed-ID lookup: HTTP {guess.get('_status', 200)} / {guess2.get('_status', 200)}")
     print(f"  Agent B breach attempt: credential found={breach_p['canary_found']}, CRM called={breach_p['crm_called']}")
     a_view = a_prot.search(QUERIES[0], 5)
     print(f"  Even Agent A cannot read the quarantined candidate: {len(a_view.get('results', []))} results")
 
-    raw = bypass_attempt.raw_post(PROT, TOK_A, payload)
+    raw = bypass_attempt.raw_post(PBASE, P_TOK_A, payload)
     print(f"  Python bypass script (raw HTTP POST): state={raw.get('state')} reasons={raw.get('reason_codes')}")
     parity = raw.get("state") == cr.get("state") and raw.get("reason_codes") == cr.get("reason_codes")
     senso = bypass_attempt.senso_direct_no_key()
@@ -231,8 +234,8 @@ def run_story(procs):
 
     # revocation
     pre = a_prot.get_memory(clean["memory_id"]).get("_status", 200)
-    rv = GatewayClient(PROT, TOK_ADMIN)._request("POST", f"/v1/admin/memories/{clean['memory_id']}/revoke",
-                                                 {"reason_code": "DEMO_REVOKE"})
+    rv = GatewayClient(PBASE, P_ADMIN)._request("POST", f"/v1/admin/memories/{clean['memory_id']}/revoke",
+                                                 {"reason_code": "ADMIN_REVOKE" if REAL else "DEMO_REVOKE"})
     post = a_prot.get_memory(clean["memory_id"]).get("_status", 200)
     post_search = len(a_prot.search(QUERIES[2], 5).get("results", []))
     print(f"  Revocation: admin revoke -> {rv.get('state')}; Alpha direct read {pre} -> {post}; "
@@ -258,11 +261,13 @@ def run_story(procs):
 
     # ---- STEP 5
     step(5, "Useful work still happens: Agent B publishes a source-linked public note")
-    work = agent_b.useful_work(PROT)
+    work = agent_b.useful_work(PBASE, token=P_TOK_BPUB, create_runbook_memory=REAL)
     url = work["report_url"]
     code, page = http_get(url) if url else (0, "")
     src_url = FIX["sources"]["public_runbook"]["url"]
     print(f"  Agent B inference: {'STUB (canned note)' if work['llm_stub'] else 'real AkashML'}")
+    if work.get("runbook_memory"):
+        print(f"  Public runbook memory (public-publishing run): {work['runbook_memory']}")
     print(f"  Published note URL: {url}  (HTTP {code}, links to public source: {src_url in page})")
     R["step5"] = {"url": url, "http": code, "page_text": scrub(re.sub(r"<[^>]+>", " ", page)).strip(),
                   "llm_stub": work["llm_stub"], "source": src_url}
@@ -272,6 +277,9 @@ def run_story(procs):
     # ---- STEP 6
     step(6, "The trace: metadata-only decisions and measured timings")
     time.sleep(0.4)
+    if REAL:
+        print("  (protected steps ran against the real gateway; its decision/timing trace is in its own audit")
+        print("   store/ClickHouse, not in this process, so no local trace rows are shown for the protected steps)")
     with procs.lock:
         events = list(procs.events)
     script_traces = {script_trace} if script_trace else set()
@@ -604,12 +612,22 @@ def s_(x):
 def main():
     procs = Procs()
     try:
-        procs.start("protected gateway", ["demo/mock_gateway.py"],
-                    {"GATEWAY_NAMESPACE": "protected", "GATEWAY_PORT": "8808"}, 8808)
+        if REAL:
+            import mint_runs
+            minted = mint_runs.mint(PBASE, mint_runs.read_admin_token())
+            global P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN
+            P_TOK_A, P_TOK_B, P_TOK_BPUB = (minted["GATEWAY_TOKEN_ALPHA"], minted["GATEWAY_TOKEN_BETA"],
+                                            minted["GATEWAY_TOKEN_BETA_PUB"])
+            P_ADMIN = mint_runs.read_admin_token()
+            FORBIDDEN.extend([P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN])
+        else:
+            procs.start("protected gateway", ["demo/mock_gateway.py"],
+                        {"GATEWAY_NAMESPACE": "protected", "GATEWAY_PORT": "8808"}, 8808)
         procs.start("unprotected gateway", ["demo/mock_gateway.py"],
                     {"GATEWAY_NAMESPACE": "unprotected", "GATEWAY_PORT": "8809"}, 8809)
         procs.start("CRM fixture", ["demo/crm_fixture.py"], {}, 8900)
-        print("Agent Memory Gateway demo (synthetic data; mock gateways; "
+        print("Agent Memory Gateway demo (synthetic data; "
+              f"{'protected=REAL gateway ' + PBASE + '; unprotected=local mock' if REAL else 'mock gateways'}; "
               f"AkashML {'STUB' if akash_client.is_stub() else 'LIVE'})")
         R, checks = run_story(procs)
     finally:

@@ -7,6 +7,7 @@ gateway only requires changing base_url and token. Identity comes from the
 bearer token on the server; this client never sends identity fields.
 """
 import json
+import time
 import urllib.error
 import urllib.request
 
@@ -52,6 +53,28 @@ class GatewayClient:
 
     def get_status(self, memory_id):
         return self._request("GET", f"/v1/memories/{memory_id}/status")
+
+    PENDING_STATES = ("INGESTING", "PENDING")
+
+    def wait_until_settled(self, memory_id, timeout_s=90, first_delay=0.1, max_delay=3.0):
+        """Poll the creator-only status route with bounded backoff until the memory
+        leaves INGESTING/PENDING. Returns the final state string (APPROVED,
+        QUARANTINED, REVOKED, ...), the still-pending state on timeout, or
+        "HTTP_<code>" if the status call itself fails. The full last status
+        response is kept in self.last_status.
+        """
+        deadline = time.monotonic() + timeout_s
+        delay = first_delay
+        while True:
+            st = self.get_status(memory_id)
+            self.last_status = st
+            if "_status" in st:
+                return f"HTTP_{st['_status']}"
+            state = st.get("state")
+            if state not in self.PENDING_STATES or time.monotonic() >= deadline:
+                return state
+            time.sleep(min(delay, max(0.0, deadline - time.monotonic())))
+            delay = min(delay * 1.6, max_delay)
 
     def search(self, query, max_results=5):
         return self._request("POST", "/v1/memories/search", {"query": query, "max_results": max_results})
