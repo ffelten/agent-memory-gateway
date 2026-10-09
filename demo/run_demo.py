@@ -385,6 +385,58 @@ footer{margin-top:40px;font-size:13px;color:var(--mut)}
 """
 
 
+def md_to_html(text, max_lines=6, max_chars=500):
+    """Safe minimal Markdown: escape first, then bold, bullets, headings, paragraphs."""
+    lines = [re.sub(r"[ \t]+", " ", l).strip() for l in text.replace("\r", "").split("\n")]
+    out, used, chars, truncated = [], 0, 0, False
+    kept = []
+    for l in lines:
+        if not l and (not kept or not kept[-1]):
+            continue
+        if l:
+            if used >= max_lines or chars >= max_chars:
+                truncated = True
+                break
+            if chars + len(l) > max_chars:
+                l = l[: max_chars - chars].rstrip()
+                truncated = True
+            used += 1
+            chars += len(l)
+        kept.append(l)
+        if truncated:
+            break
+    if truncated and kept:
+        kept[-1] = kept[-1].rstrip() + "…"
+    bold = lambda t: re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", html.escape(t))
+    in_ul, para = False, []
+    def flush():
+        if para:
+            out.append("<p>" + " ".join(para) + "</p>")
+            para.clear()
+    for l in kept:
+        m_b = re.match(r"^[-*] +(.*)$", l)
+        m_h = re.match(r"^#{1,6} *(.*)$", l)
+        if m_b:
+            flush()
+            if not in_ul:
+                out.append("<ul>"); in_ul = True
+            out.append("<li>" + bold(m_b.group(1)) + "</li>")
+            continue
+        if in_ul:
+            out.append("</ul>"); in_ul = False
+        if m_h:
+            flush()
+            out.append("<p><b>" + html.escape(m_h.group(1).replace("**", "")) + "</b></p>")
+        elif l:
+            para.append(bold(l))
+        else:
+            flush()
+    if in_ul:
+        out.append("</ul>")
+    flush()
+    return "".join(out)
+
+
 def e(x):
     return html.escape(str(x))
 
@@ -475,10 +527,7 @@ def build_html(R, checks):
     bar = ('<div class="bar good">Same input, byte for byte</div>' if ok_same else
            '<div class="bar bad">The two runs did NOT receive identical input (check failed)</div>')
 
-    if s5["url"]:
-        work_link = f'<p><a href="{e(s5["url"])}">Open the published note</a> (served locally while the demo runs)</p>'
-    else:
-        work_link = ""
+    work_link = '<p class=small style="color:var(--muted,#666)">Published by the gateway\'s report route during this run.</p>'
     work_cls = "good" if ok_work else "bad"
     pt = re.sub(r"\s+", " ", s5["page_text"]).strip()
     note_title = ""
@@ -488,13 +537,18 @@ def build_html(R, checks):
             break
     body = pt[len(note_title) * 2 + 1:] if note_title else pt
     note_body = re.sub(r"\s+", " ", body.split("Source:")[0]).replace("[STUB]", "").strip()
+    # newline-preserving body for Markdown rendering
+    raw_body = s5["page_text"].split("Source:")[0].replace("[STUB]", "")
+    if note_title:
+        raw_body = raw_body.replace(note_title, "", 2)
+    note_html = md_to_html(raw_body)
     if not note_title:
         note_title = "Published note"
     work_head = ("Beta's agent then published a troubleshooting note using only the public runbook." if ok_work
                  else "Beta's agent did not publish a valid note (check failed).")
     work = (f'<div class="card" style="border-color:var(--{work_cls}line)"><div class="lbl" style="color:var(--{work_cls})">'
             f'{"Done" if ok_work else "Failed"}</div>'
-            f'<p><b>{e(note_title)}</b></p><p>{e(note_body)}</p>{work_link}'
+            f'<p><b>{e(note_title)}</b></p>{note_html}{work_link}'
             f'<p class=small>Source: <a href="{e(s5["source"])}">{e(s5["source"])}</a></p></div>')
 
     ok_c = ok_block
