@@ -1,6 +1,6 @@
 # Agent Memory Gateway presentation
 
-A standalone recorded presentation. Open `index.html` directly, or serve it from the repository root:
+A standalone incident player with three persistent panes: Alpha, shared memory, and Beta. Open `index.html` directly, or serve it from the repository root:
 
 ```sh
 python3 -m http.server 4173 --bind 127.0.0.1 --directory presentation
@@ -8,9 +8,21 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory presentation
 
 Then open <http://127.0.0.1:4173>. Arrow keys navigate; Space plays or pauses; Escape closes an open overlay. The page makes no gateway or sponsor API calls and needs no credentials.
 
-The main replay button brings the comparison into view. Its smaller play/pause control stays beside the chapter controls. The expand button enters a compact full-screen presentation. Motion follows the browser's reduced-motion preference.
+Play, pause, or seek through the incident at 1× or 2× speed. Play brings the player into view; the full-screen control provides a compact presentation layout. Starting the protected replay resets the player to a fresh history and memory state. Motion follows the browser's reduced-motion preference.
 
-The original, editable [Figma concept](https://www.figma.com/design/UpEbOEfZFJ2Cy0G2JJwhcy?node-id=1-2) was created with the Figma MCP. This standalone implementation lives entirely in `presentation/` and does not replace the existing demo UI.
+This standalone implementation lives entirely in `presentation/` and does not replace the existing demo UI.
+
+The editable [warm Figma concept](https://www.figma.com/design/UpEbOEfZFJ2Cy0G2JJwhcy?node-id=5-2) was created through the Figma MCP. It preserves the earlier concept as a separate frame.
+
+## What is illustrated
+
+`scenario.js` authors both incident paths. Every conversation and tool response is scripted. The label **Haiku · simulated** names the illustrative agent; no Haiku model or other provider is called. The displayed credential `DEMO_ALPHA_KEY` and customer record are invented presentation fixtures, not the deployed gateway's canary or actual customer data.
+
+The poisoned `SKILL.md` exists only as JavaScript display text. It is never written to a skills directory, installed, or executed. In the story, Alpha reads the skill, follows its instruction to preserve original incident context including a credential, and submits the handoff to shared memory. The unprotected illustration shows Beta retrieving and reusing that credential after its own key failed.
+
+The protected illustration starts fresh and uses the same candidate text. The whole candidate is quarantined before ingestion; both search and direct lookup keep it unreadable. A separate, previously approved Alpha record remains available to Alpha and is denied to Beta. A trusted harness then starts a separate Beta publishing context containing only an independently approved public source. The public note is an illustrated result of that source, never a sanitized version of the quarantined candidate. No live report or webpage is created by playback.
+
+Messages accumulate visually through the selected step; the explicit “Fresh context” message marks a new publishing conversation, not reuse of earlier private context. Every step declares a complete memory snapshot. Recorded receipts below are separate evidence and do not authenticate these invented conversations or tool outputs.
 
 ## What is recorded
 
@@ -18,7 +30,7 @@ The original, editable [Figma concept](https://www.figma.com/design/UpEbOEfZFJ2C
 
 Trace IDs, operations, decisions, reasons, and timings come from that export. Timings retain their measured values; display rounding is cosmetic. The source link is the official Senso knowledge-base documentation. A report creation was allowed, but the export has no public report URL, so `reportUrl` is `null`.
 
-The baseline is a local mock. The scenario animation, diagrams, redacted sample text, and playback duration illustrate the story. They are not new measurements or a live run. Decision metadata alone does not prove retrieval contents, identical input hashes, caller language, runtime isolation, or a universal detection rate.
+The earlier recorded demo's baseline was a local mock. The incident player is a new authored illustration, not a replay of those exact conversations. Playback duration is not a measurement. Decision metadata alone does not prove retrieval contents, identical input hashes, caller language, runtime isolation, or a universal detection rate.
 
 ## Refreshing the evidence safely
 
