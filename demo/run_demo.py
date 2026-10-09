@@ -41,6 +41,15 @@ TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN = "tok-alpha", "tok-beta", "tok-beta-pub", "ad
 REAL = bool(os.environ.get("GATEWAY_BASE_URL"))
 PBASE = os.environ["GATEWAY_BASE_URL"].rstrip("/") if REAL else PROT
 P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN = TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN
+# Pre-minted mode: no admin bearer available (or GATEWAY_USE_PREMINTED=1), but the gateway owner
+# supplied three run tokens (env, or the gitignored .gateway-runs.env). Minting and the admin
+# revoke step are skipped.
+PREMINTED = False
+RUNS_ENV_FILE = pathlib.Path(os.environ.get("GATEWAY_RUNS_ENV_FILE") or ROOT / ".gateway-runs.env")
+TOKEN_NAMES = ("GATEWAY_TOKEN_ALPHA", "GATEWAY_TOKEN_BETA", "GATEWAY_TOKEN_BETA_PUB")
+SKIP = "SKIP"
+SKIP_REVOKE = "needs admin bearer; verified in the gateway owner's live AWS smoke run"
+LOCAL_HOSTS = ("127.0.0.1", "localhost")
 FORBIDDEN = [CANARY, ADDRESS, TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN, FIX["tenants"]["beta"]["crm_bearer"]]
 QUERIES = ["Alpha deploy handoff", "deploy handoff firmware sync legacy CRM", "Alpha re-pair checklist firmware"]
 REDACTED = "DEMO_SECRET_***"
@@ -56,6 +65,21 @@ def scrub(s):
 
 def jscrub(obj):
     return scrub(json.dumps(obj, indent=2))
+
+
+def load_premint_tokens():
+    """Return {NAME: token} if all three tokens exist (env first, then the runs env file), else None."""
+    vals = {k: os.environ.get(k) for k in TOKEN_NAMES}
+    if not all(vals.values()) and RUNS_ENV_FILE.exists():
+        for line in RUNS_ENV_FILE.read_text().splitlines():
+            k, sep, v = line.strip().partition("=")
+            if sep and k in vals and not vals[k]:
+                vals[k] = v.strip().strip("'\"")
+    return vals if all(vals.values()) else None
+
+
+def status_of(ok):
+    return ok if ok == SKIP else ("PASS" if ok else "FAIL")
 
 
 def step(n, title):
@@ -135,8 +159,15 @@ def run_story(procs):
     R = {}   # results for the report
     checks = []
 
+    traces = []   # (label, trace_id) returned by the real gateway; ids only, no content
+
+    def tr(label, resp):
+        t = resp.get("trace_id") if isinstance(resp, dict) else None
+        if t:
+            traces.append((label, str(t)))
+
     def check(name, ok, evidence):
-        checks.append((name, bool(ok), evidence))
+        checks.append((name, ok if ok == SKIP else bool(ok), evidence))
 
     a_unp, a_prot = GatewayClient(UNPROT, TOK_A), GatewayClient(PBASE, P_TOK_A)
     b_unp, b_prot = GatewayClient(UNPROT, TOK_B), GatewayClient(PBASE, P_TOK_B)
@@ -217,11 +248,16 @@ def run_story(procs):
     senso_denied = senso in (401, 403) or isinstance(senso, str)
     print(f"  Direct Senso write WITHOUT backend key: {senso}  -> {'denied/blocked' if senso_denied else 'NOT DENIED'}")
     script_trace = raw.get("trace_id")
+    tr("protected write (client path)", cr)
+    tr("Beta search (protected)", resp_p)
+    tr("guessed-ID lookup", guess)
+    tr("bypass script write", raw)
 
     # permission preservation: independently admitted clean Alpha memory
     clean = a_prot.create_memory("Alpha approved note: Service Plan A re-pair checklist",
                                  "Alpha account checklist: Service Plan A devices need re-pairing after a "
                                  "firmware update before manual sync.", "clean-" + uuid.uuid4().hex[:8])
+    tr("clean Alpha note write", clean)
     wait_approved(a_prot, clean["memory_id"])
     a_find = a_prot.search(QUERIES[2], 5).get("results", [])
     b_find = b_prot.search(QUERIES[2], 5).get("results", [])
@@ -232,14 +268,19 @@ def run_story(procs):
           f"direct HTTP {a_direct.get('_status', 200)}; B search hits={len(b_find)}, direct ID HTTP "
           f"{b_direct.get('_status', 200)}")
 
-    # revocation
+    # revocation (needs the admin bearer; skipped in pre-minted mode)
     pre = a_prot.get_memory(clean["memory_id"]).get("_status", 200)
-    rv = GatewayClient(PBASE, P_ADMIN)._request("POST", f"/v1/admin/memories/{clean['memory_id']}/revoke",
-                                                 {"reason_code": "ADMIN_REVOKE" if REAL else "DEMO_REVOKE"})
-    post = a_prot.get_memory(clean["memory_id"]).get("_status", 200)
-    post_search = len(a_prot.search(QUERIES[2], 5).get("results", []))
-    print(f"  Revocation: admin revoke -> {rv.get('state')}; Alpha direct read {pre} -> {post}; "
-          f"search hits after revoke={post_search}")
+    if PREMINTED:
+        rv, post, post_search = {}, None, None
+        print(f"  Revocation: SKIP - {SKIP_REVOKE}")
+    else:
+        rv = GatewayClient(PBASE, P_ADMIN)._request("POST", f"/v1/admin/memories/{clean['memory_id']}/revoke",
+                                                     {"reason_code": "ADMIN_REVOKE" if REAL else "DEMO_REVOKE"})
+        tr("admin revoke", rv)
+        post = a_prot.get_memory(clean["memory_id"]).get("_status", 200)
+        post_search = len(a_prot.search(QUERIES[2], 5).get("results", []))
+        print(f"  Revocation: admin revoke -> {rv.get('state')}; Alpha direct read {pre} -> {post}; "
+              f"search hits after revoke={post_search}")
 
     R["step4"] = {"create": cr, "search": resp_p, "guess_status": guess.get("_status", 200),
                   "breach": breach_p, "raw": {k: raw.get(k) for k in ("state", "reason_codes")},
@@ -256,47 +297,63 @@ def run_story(procs):
           f"A hits={len(a_find)}; B hits={len(b_find)}, B direct={b_direct.get('_status', 200)}")
     check("Script parity (MCP vs Python HTTP)", parity and senso_denied,
           f"client={cr.get('state')}, raw={raw.get('state')}, direct Senso w/o key={senso}")
-    check("Revocation (immediate)", pre == 200 and post == 404 and post_search == 0 and rv.get("state") == "REVOKED",
-          f"Alpha direct read {pre} -> {post} right after revoke")
+    if PREMINTED:
+        check("Revocation (immediate)", SKIP, SKIP_REVOKE)
+    else:
+        check("Revocation (immediate)", pre == 200 and post == 404 and post_search == 0
+              and rv.get("state") == "REVOKED", f"Alpha direct read {pre} -> {post} right after revoke")
 
     # ---- STEP 5
     step(5, "Useful work still happens: Agent B publishes a source-linked public note")
     work = agent_b.useful_work(PBASE, token=P_TOK_BPUB, create_runbook_memory=REAL)
     url = work["report_url"]
+    rep_resp = work.get("response") or {}
+    tr("public report", rep_resp)
     code, page = http_get(url) if url else (0, "")
     src_url = FIX["sources"]["public_runbook"]["url"]
     print(f"  Agent B inference: {'STUB (canned note)' if work['llm_stub'] else 'real AkashML'}")
     if work.get("runbook_memory"):
         print(f"  Public runbook memory (public-publishing run): {work['runbook_memory']}")
     print(f"  Published note URL: {url}  (HTTP {code}, links to public source: {src_url in page})")
+    if not url:
+        reason = rep_resp.get("error") or rep_resp.get("reason_codes") or rep_resp.get("reason_code") or "no report_url"
+        report_fail = f"report rejected: HTTP {rep_resp.get('_status', '?')} reason={reason}"
+        print(f"  FAIL: {report_fail} (if the publishing run was already used, a fresh publishing run is needed)")
+    else:
+        report_fail = ""
     R["step5"] = {"url": url, "http": code, "page_text": scrub(re.sub(r"<[^>]+>", " ", page)).strip(),
                   "llm_stub": work["llm_stub"], "source": src_url}
     check("Useful work (public note, valid source link)", bool(url) and code == 200 and src_url in page
-          and CANARY not in page, f"report HTTP {code}, source link present={src_url in page}")
+          and CANARY not in page, report_fail or f"report HTTP {code}, source link present={src_url in page}")
 
     # ---- STEP 6
     step(6, "The trace: metadata-only decisions and measured timings")
     time.sleep(0.4)
     if REAL:
         print("  (protected steps ran against the real gateway; its decision/timing trace is in its own audit")
-        print("   store/ClickHouse, not in this process, so no local trace rows are shown for the protected steps)")
+        print("   store/ClickHouse, not in this process. Gateway trace IDs returned to this run:)")
+        for label, t in traces:
+            print(f"  {label:<32}{t}")
     with procs.lock:
         events = list(procs.events)
     script_traces = {script_trace} if script_trace else set()
     rows = []
-    for e in events:
+    for e in ([] if REAL else events):
         rows.append(dict(ns=e.get("ns"), operation=e["operation"],
                          transport="script" if e.get("trace_id") in script_traces else "mcp",
                          decision=e["decision"], reason_code=e["reason_code"], gate_ms=e["gate_ms"],
                          total_ms=e["total_ms"], trace=str(e.get("trace_id", ""))[:8]))
     R["rows"] = rows
+    R["traces"] = traces
     hdr = f"  {'ns':<12}{'operation':<14}{'transport':<10}{'decision':<9}{'reason_code':<14}{'gate_ms':>8}{'total_ms':>10}"
-    print(hdr + "\n  " + "-" * (len(hdr) - 2))
+    if not REAL:
+        print(hdr + "\n  " + "-" * (len(hdr) - 2))
     for r in rows:
         print(f"  {r['ns']:<12}{r['operation']:<14}{r['transport']:<10}{r['decision']:<9}"
               f"{r['reason_code']:<14}{r['gate_ms']:>8.2f}{r['total_ms']:>10.2f}")
-    print("  (timings measured from the MOCK gateway; gate_ms is 0 in the unprotected namespace because admission is skipped)")
-    table_html = decisions_table_html(rows)
+    if not REAL:
+        print("  (timings measured from the MOCK gateway; gate_ms is 0 in the unprotected namespace because admission is skipped)")
+    table_html = decisions_table_html(rows) + traces_html(traces)
     with procs.lock:
         blob = "".join(procs.raw_output) + table_html + "\n".join(json.dumps(e) for e in events)
     leaks = [f for f in FORBIDDEN + QUERIES if f in blob]
@@ -451,6 +508,17 @@ def decisions_table_html(rows):
             f"<tbody>{body}</tbody></table></div>")
 
 
+def traces_html(traces):
+    body = "".join(f"<tr><td>{e(l)}</td><td><code>{e(t)}</code></td></tr>" for l, t in traces)
+    return ('<div class=tw><table id="gateway-traces"><thead><tr><th>step</th><th>gateway trace ID</th></tr></thead>'
+            f"<tbody>{body}</tbody></table></div>")
+
+
+def gateway_label():
+    host = PBASE.split("//", 1)[-1].split("/")[0].split(":")[0]
+    return "real gateway code (local)" if host in LOCAL_HOSTS else "live AWS gateway"
+
+
 def mask_address(addr):
     """Keep house number and last word; mask the middle words after two letters."""
     words = addr.split()
@@ -480,8 +548,9 @@ def build_html(R, checks):
     ok_par = ck.get("Script parity (MCP vs Python HTTP)", False)
     ok_work = ck.get("Useful work (public note, valid source link)", False)
     ok_perm = ck.get("Permission preservation", False)
+    live_line = f'<p class=small>Ran against the {e(gateway_label())}.</p>' if REAL else ""
     rec = s3["record_view"]
-    allp = all(ok for _, ok, _ in checks)
+    allp = all(ok for _, ok, _ in checks)   # SKIP is truthy: only FAIL breaks ALL PASS
 
     def chip(ok, good_t, bad_t, bad_when_ok=False):
         cls = "good" if ok else "bad"
@@ -557,8 +626,18 @@ def build_html(R, checks):
         f'<p class="{"" if ok_perm else "no"}">{"" if ok_perm else "NOT PROVEN: "}Permissions follow the data on every read.</p>'
         f'<p class="{"" if ok_par else "no"}">{"" if ok_par else "NOT PROVEN: "}Scripts can\'t go around it: same door, same rules.</p>')
 
-    chk = "".join(f"<tr><td>{e(n)}</td><td class={'pass' if ok else 'fail'}>{'PASS' if ok else 'FAIL'}</td>"
+    chk = "".join(f"<tr><td>{e(n)}</td><td class={'pass' if ok else 'fail'}>{status_of(ok)}</td>"
                   f"<td>{e(ev)}</td></tr>" for n, ok, ev in checks)
+    if REAL:
+        trace_section = ("<h4>Gateway trace IDs (metadata only)</h4>"
+                         f"<p class=mut>Trace IDs returned by the {e(gateway_label())} for this run's protected calls. "
+                         "No secret, address, query or token. The gateway's own audit store holds the decisions and timings.</p>"
+                         + traces_html(R["traces"]))
+    else:
+        trace_section = ("<h4>Decision and timing trace (metadata only)</h4>"
+                         "<p class=mut>Operation, transport, decision, reason code and measured timings. No secret, address, "
+                         f"query or token. Timings are measured from the mock gateway ({R['events']} events); ClickHouse is "
+                         "not connected in this run.</p>" + decisions_table_html(R["rows"]))
     stub = ('<footer>Agent text generated by a stub model in this run (AkashML key pending).</footer>'
             if R["akash_stub"] else "")
     return f"""<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
@@ -601,7 +680,7 @@ def build_html(R, checks):
 {breach_res}</div>
 <div class="col good"><h3>With the gateway</h3>
 <ol class=steps style="padding-left:0">{block_steps}</ol>
-{block_res}</div>
+{block_res}{live_line}</div>
 </div>
 {parity}
 </section>
@@ -619,10 +698,8 @@ def build_html(R, checks):
 
 <details>
 <summary>Evidence for judges: real run data</summary>
-<p class=mut>Generated {e(time.strftime('%Y-%m-%d %H:%M:%S'))} from a live run against the mock gateways and a synthetic CRM. All data is synthetic. Credentials shown as <code>{REDACTED}</code>. Overall: <span class="{'pass' if allp else 'fail'}">{'ALL PASS' if allp else 'FAILURES'}</span></p>
-<h4>Decision and timing trace (metadata only)</h4>
-<p class=mut>Operation, transport, decision, reason code and measured timings. No secret, address, query or token. Timings are measured from the mock gateway ({R['events']} events); ClickHouse is not connected in this run.</p>
-{decisions_table_html(R['rows'])}
+<p class=mut>Generated {e(time.strftime('%Y-%m-%d %H:%M:%S'))} from a live run against {'the ' + e(gateway_label()) + ' (protected side), a local mock (unprotected side)' if REAL else 'the mock gateways'} and a synthetic CRM. All data is synthetic. Credentials shown as <code>{REDACTED}</code>. Overall: <span class="{'pass' if allp else 'fail'}">{'ALL PASS' if allp else 'FAILURES'}</span></p>
+{trace_section}
 <h4>Acceptance checks</h4>
 <div class=tw><table><thead><tr><th>check</th><th>result</th><th>evidence</th></tr></thead><tbody>{chk}</tbody></table></div>
 <h4>Frozen candidate SHA-256 (identical in both namespaces)</h4>
@@ -668,12 +745,24 @@ def main():
     try:
         if REAL:
             import mint_runs
-            minted = mint_runs.mint(PBASE, mint_runs.read_admin_token())
-            global P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN
+            global P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN, PREMINTED
+            try:
+                admin = None if os.environ.get("GATEWAY_USE_PREMINTED") else mint_runs.read_admin_token()
+            except SystemExit:
+                admin = None   # no admin bearer available
+            if admin:
+                minted = mint_runs.mint(PBASE, admin)
+                P_ADMIN = admin
+            else:
+                minted = load_premint_tokens()
+                if not minted:
+                    raise SystemExit("no admin bearer and no GATEWAY_TOKEN_ALPHA/BETA/BETA_PUB "
+                                     "(env or .gateway-runs.env); cannot run against the real gateway")
+                PREMINTED, P_ADMIN = True, None
+                print("Pre-minted tokens mode: minting and the admin revoke step are skipped (tokens not printed)")
             P_TOK_A, P_TOK_B, P_TOK_BPUB = (minted["GATEWAY_TOKEN_ALPHA"], minted["GATEWAY_TOKEN_BETA"],
                                             minted["GATEWAY_TOKEN_BETA_PUB"])
-            P_ADMIN = mint_runs.read_admin_token()
-            FORBIDDEN.extend([P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN])
+            FORBIDDEN.extend([t for t in (P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN) if t])
         else:
             procs.start("protected gateway", ["demo/mock_gateway.py"],
                         {"GATEWAY_NAMESPACE": "protected", "GATEWAY_PORT": "8808"}, 8808)
@@ -691,10 +780,13 @@ def main():
     (OUT / "index.html").write_text(doc)
     print(f"\n{'=' * 78}\nACCEPTANCE CHECKS\n{'=' * 78}")
     for n, ok, ev in checks:
-        print(f"  {'PASS' if ok else 'FAIL'}  {n}  [{ev}]")
+        print(f"  {status_of(ok)}  {n}  [{ev}]")
     html_leaks = [f for f in FORBIDDEN if f in doc]
     print(f"  {'PASS' if not html_leaks else 'FAIL'}  HTML report contains no raw canary/address/token")
     ok = all(c[1] for c in checks) and not html_leaks
+    skipped = [c[0] for c in checks if c[1] == SKIP]
+    if skipped:
+        print(f"  NOTE: {len(skipped)} check(s) SKIPPED (not passed, not failed): {', '.join(skipped)}")
     print(f"\nWrote {OUT / 'index.html'}\nRESULT: {'ALL PASS' if ok else 'FAILURES'}")
     return 0 if ok else 1
 
