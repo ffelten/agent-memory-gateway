@@ -71,6 +71,16 @@ sam deploy --template-file build/sam/template.yaml \
   EnableScheduledWorkers=false
 ```
 
+If Docker is unavailable, the current pure-Python runtime dependencies can be
+built locally with Python 3.12 and pip using the same source allowlist:
+
+```sh
+uv pip install --python .venv/bin/python pip
+PATH="$PWD/.venv/bin:$PATH" .venv/bin/python infra/build.py --no-container
+```
+
+Use the container build if native dependencies are introduced.
+
 `EnableScheduledWorkers` defaults to `false`, so neither schedule invokes a worker
 before sponsor setup. Once both secret values and the ClickHouse schema are
 ready, update the same stack with `EnableScheduledWorkers=true`. The gateway

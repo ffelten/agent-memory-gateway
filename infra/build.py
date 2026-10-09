@@ -1,5 +1,6 @@
-"""Stage only Lambda source and dependencies, then perform a SAM container build."""
+"""Stage only Lambda source and dependencies, then perform a SAM build."""
 
+import argparse
 from pathlib import Path
 import shutil
 import subprocess
@@ -37,18 +38,29 @@ def stage_source(root: Path, destination: Path) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--no-container", action="store_true",
+        help="Use local Python 3.12 for pure-Python dependencies when Docker is unavailable",
+    )
+    arguments = parser.parse_args()
     if shutil.which("sam") is None:
         raise SystemExit("Install the AWS SAM CLI before building")
     root = Path(__file__).resolve().parents[1]
     with tempfile.TemporaryDirectory(prefix="memory-gateway-sam-") as staging:
         staged = Path(staging)
         stage_source(root, staged)
-        subprocess.run(
+        command = ["sam", "build"]
+        if not arguments.no_container:
+            command.append("--use-container")
+        command.extend(
             [
-                "sam", "build", "--use-container",
                 "--template-file", str(staged / "infra/template.yaml"),
                 "--build-dir", str(root / "build/sam"),
-            ],
+            ]
+        )
+        subprocess.run(
+            command,
             cwd=staged,
             check=True,
         )

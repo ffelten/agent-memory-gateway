@@ -13,7 +13,7 @@ Senso knowledge storage · ClickHouse audit telemetry. All demo data is syntheti
 - `agents/` — Agents A/B + gateway client (Florian)
 - `demo/` — CRM fixture, demo runner, output page (Florian)
 - `gateway/`, `infra/` — AWS gateway (Ash)
-- `analytics/` — ClickHouse telemetry (separately assigned)
+- `analytics/` — ClickHouse ingestion (Ash); demo trace display (Florian)
 - `tests/` — acceptance checks
 - `docs/handoffs/` — cross-agent handoffs
 
@@ -27,6 +27,10 @@ See the "Agent integration coordination" issue.
 The real gateway lives in `gateway/`. It enforces run-scoped identity, whole-write
 quarantine, inherited source permissions, provider-version checks, and immediate
 authoritative revocation. `demo/mock_gateway.py` remains Florian's local mock.
+
+AWS API base URL: `https://yrx2yjzb7h.execute-api.us-east-1.amazonaws.com`.
+The deployed gateway passed live AWS/Senso permission and revocation checks;
+see [Ash's handoff](docs/handoffs/ash.md) for exact coverage and secure token setup.
 
 ```sh
 uv venv --python 3.12 .venv

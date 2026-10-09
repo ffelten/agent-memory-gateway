@@ -1,7 +1,7 @@
-# Gateway integration contract — proposed v1
+# Gateway integration contract — v1
 
 Existing HTTP routes and fixture IDs in the specification remain unchanged.
-This file records the implementation boundary to confirm with Florian; it is not evidence of live integration.
+This file records the implementation boundary. Deployment and verification evidence is summarized in `docs/handoffs/ash.md`.
 
 ## Ownership and runtime
 
@@ -33,6 +33,6 @@ Store interface (Python dict records):
 
 Use one demo organization tenant; Alpha/Beta are customer access boundaries within it, identified by principal/source permissions. Registered sources carry `source_id,tenant_id,text,sha256,url,retrieved_at,readers,public,active`. `readers=["*"]` means all principals in that organization. `public=true` additionally permits public publication. Run records freeze source IDs, source hashes, and the intersection audience. Reads require current source permission plus the frozen audience and source-set compatibility.
 
-## Handoff still required
+## Deployed integration
 
-Florian's adapter is merged and its original round trip was reported in issue #1. Gateway-side version metadata checks still require a real integrated round trip. Factory is `gateway.senso_bridge:create_provider`; config fields `api_key`, `folder_id`, optional fixed official `base_url`. Ash provides deployed base URL and securely issued tokens after AWS configuration. Neither live service access nor deployment is established by this contract alone.
+Florian's adapter is merged and the gateway's real AWS/Senso round trip passed, including version metadata checks. Factory is `gateway.senso_bridge:create_provider`; config fields `api_key`, `folder_id`, optional fixed official `base_url`. Deployed base URL is `https://yrx2yjzb7h.execute-api.us-east-1.amazonaws.com`. Existing agent environment names are `GATEWAY_BASE_URL`, `AGENT_A_TOKEN`, `AGENT_B_TOKEN`, and `AGENT_B_PUB_TOKEN`; each process receives only its own run token. Tokens travel through the secure handoff, never this contract or Git. The full live Akash/baseline demonstration remains a separate integration check.
