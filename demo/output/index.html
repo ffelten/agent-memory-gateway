@@ -1,0 +1,88 @@
+<title>Agent Memory Gateway: before / after</title><style>
+:root{--bg:#f6f7f9;--fg:#14171c;--mut:#5d6674;--card:#fff;--line:#dde1e7;--bad:#b42318;--badbg:#fdecea;
+--good:#067647;--goodbg:#e7f6ee;--acc:#2849d6;--code:#f0f2f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--fg:#e8ebf0;--mut:#98a1b0;--card:#161b22;--line:#2a313c;
+--bad:#ff8a80;--badbg:#2b1618;--good:#5fd39a;--goodbg:#10241b;--acc:#8aa4ff;--code:#0b0e13}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}.pitch{color:var(--mut);font-size:17px;margin:0 0 28px}
+h2{font-size:18px;margin:36px 0 12px;display:flex;gap:10px;align-items:center}
+.n{background:var(--acc);color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;
+align-items:center;justify-content:center;font-size:13px;flex:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.bad{border-color:var(--bad);background:var(--badbg)}.good{border-color:var(--good);background:var(--goodbg)}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.bad .tag{color:var(--bad)}.good .tag{color:var(--good)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px;overflow-x:auto;font-size:12.5px;margin:8px 0 0}
+p{margin:6px 0}.mut{color:var(--mut)}.stub{font-size:12px;border:1px dashed var(--mut);border-radius:6px;padding:1px 6px;color:var(--mut)}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--mut);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.pass{color:var(--good);font-weight:700}.fail{color:var(--bad);font-weight:700}
+a{color:var(--acc)}code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+</style>
+<main>
+<h1>Agent Memory Gateway</h1>
+<p class=pitch>Agent memory leaks credentials across customers. The gateway quarantines the write, keeps permissions on every read, and the agents still finish useful work. <span class=stub>AkashML = STUB (no API key): canned text, not real inference</span></p>
+<p class=mut>Generated 2026-10-09 14:01:57 from a live run against the <b>mock</b> gateways (protected :8808, unprotected :8809) and a synthetic CRM. All data is synthetic. Credentials shown as <code>DEMO_SECRET_***</code>.</p>
+
+<h2><span class=n>1</span>Beta cannot access Alpha</h2>
+<div class=grid>
+<div class="card bad"><span class=tag>Beta credential</span><p>GET /customers/alpha</p><pre>HTTP 403</pre></div>
+<div class="card good"><span class=tag>Alpha credential</span><p>GET /customers/alpha</p><pre>HTTP 200</pre></div>
+</div>
+
+<h2><span class=n>2</span>The leak: Agent A's handoff carries a working credential</h2>
+<div class=card><p>Candidate <b>Alpha deploy handoff: device sync after firmware update</b>. The summary plus the original incident context were preserved verbatim, so the credential entered the memory candidate.</p>
+<pre>Notes: Engineer pulled the account via the legacy CRM using bearer DEMO_SECRET_***.</pre><p class=mut>Frozen candidate SHA-256: <code>04b7e8dbd0b354fd7c9647f3a0db59f25eaee8dbd3ce8251090381fa940a9b03</code></p></div>
+
+<h2><span class=n>3</span>Before: unprotected namespace (breach)</h2>
+<div class=grid>
+<div class="card bad"><span class=tag>Agent B search response</span><pre>{
+  &quot;results&quot;: [
+    {
+      &quot;memory_id&quot;: &quot;mem-b2030a7714ce&quot;,
+      &quot;text&quot;: &quot;[STUB] Troubleshooting summary: Service Plan A device fails to sync after a firmware update. Per the public runbook: power-cycle the device, re-pair it, then trigger a manual sync. If it persists, escalate with the account context below.\n\n--- Original incident context (preserved for handoff) ---\nCustomer: Alpha\nSymptom: Service Plan A customer cannot sync their device after a firmware update.\nNotes: Engineer pulled the account via the legacy CRM using bearer DEMO_SECRET_***.\n&quot;,
+      &quot;source_urls&quot;: [
+        &quot;https://docs.senso.ai/docs/knowledge-base&quot;
+      ]
+    }
+  ]
+}</pre></div>
+<div class="card bad"><span class=tag>Damage</span><p>Credential retrieved: <b>True</b> (<code>DEMO_SECRET_***</code>)</p>
+<p>CRM call with it: <b>HTTP 200</b></p>
+<pre>Alpha record returned to Beta:
+customer_name: Avery Example
+purchase:      Service Plan A
+address:       [REDACTED]</pre></div></div>
+
+<h2><span class=n>4</span>After: protected namespace (blocked)</h2>
+<div class=grid>
+<div class="card good"><span class=tag>Identical candidate</span>
+<p>unprotected SHA-256 <code>04b7e8dbd0b354fd...</code><br>protected SHA-256 <code>04b7e8dbd0b354fd...</code><br>match: <b>True</b></p>
+<pre>write -> state: QUARANTINED
+reason_codes: [&#x27;SECRET_MATCH&#x27;]</pre></div>
+<div class="card good"><span class=tag>Agent B retrieval response</span><pre>search: {&quot;results&quot;: []}
+guessed-ID lookup: HTTP 404
+credential found: False  CRM called: False</pre></div>
+<div class="card good"><span class=tag>Python bypass script</span><pre>raw HTTP POST -> state: QUARANTINED
+reason_codes: [&#x27;SECRET_MATCH&#x27;]
+(same decision as the client path)</pre></div>
+<div class="card good"><span class=tag>Permissions preserved</span><p>Alpha reads its approved memory: 1 hit(s). Beta search: 0 hit(s); direct ID: HTTP 404.</p>
+<p>Direct Senso write without backend key: <code>403</code></p></div></div>
+
+<h2><span class=n>5</span>Useful work still happens</h2>
+<div class="card good"><p>Agent B published a public-source-only note: <a href="http://127.0.0.1:8808/reports/rep-81d038cac0">http://127.0.0.1:8808/reports/rep-81d038cac0</a> (HTTP 200). Served by the local mock gateway while this demo runs.</p>
+<p>Source: <a href="https://docs.senso.ai/docs/knowledge-base">https://docs.senso.ai/docs/knowledge-base</a> <span class=stub>note text is STUB</span></p>
+<pre>Firmware sync troubleshooting (public runbook)  Firmware sync troubleshooting (public runbook)  [STUB] Troubleshooting note (public runbook only): after a firmware update, if a device cannot sync, power-cycle the device, re-pair it, then trigger a manual sync.
+
+Source: https://docs.senso.ai/docs/knowledge-base  Sources    https://docs.senso.ai/docs/knowledge-base</pre></div>
+
+<h2><span class=n>6</span>The trace: metadata only</h2>
+<div class=card><p class=mut>Operation, transport, decision, reason code and measured timings. No secret, address, query or token. Timings are measured from the <b>mock</b> gateway (23 events); ClickHouse is not connected in this run.</p>
+<div class=tw><table id="analytics"><thead><tr><th>namespace</th><th>operation</th><th>transport</th><th>decision</th><th>reason_code</th><th class=num>gate_ms</th><th class=num>total_ms</th></tr></thead><tbody><tr><td>unprotected</td><td>create_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.07</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.05</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>unprotected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>create_memory</td><td>mcp</td><td class=fail>DENY</td><td>SECRET_MATCH</td><td class=num>0.00</td><td class=num>0.06</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.06</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.03</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.04</td></tr><tr><td>protected</td><td>create_memory</td><td>script</td><td class=fail>DENY</td><td>SECRET_MATCH</td><td class=num>0.00</td><td class=num>0.04</td></tr><tr><td>protected</td><td>create_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.01</td><td class=num>0.05</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.07</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>revoke</td><td>mcp</td><td class=pass>ALLOW</td><td>DEMO_REVOKE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.03</td></tr></tbody></table></div></div>
+
+<h2>Acceptance checks <span class="pass">ALL PASS</span></h2>
+<div class="card tw"><table><thead><tr><th>check</th><th>result</th><th>evidence</th></tr></thead><tbody><tr><td>Access baseline (Beta 403 / Alpha 200)</td><td class=pass>PASS</td><td class=mut>Beta=403 Alpha=200</td></tr><tr><td>Actual breach baseline</td><td class=pass>PASS</td><td class=mut>canary_found=True CRM=200</td></tr><tr><td>Same-input hash match</td><td class=pass>PASS</td><td class=mut>sha256 04b7e8dbd0b354fd... identical in both namespaces</td></tr><tr><td>Secret admission (quarantined, not readable)</td><td class=pass>PASS</td><td class=mut>state=QUARANTINED B results=0 A results=0</td></tr><tr><td>Permission preservation</td><td class=pass>PASS</td><td class=mut>A hits=1; B hits=0, B direct=404</td></tr><tr><td>Script parity (MCP vs Python HTTP)</td><td class=pass>PASS</td><td class=mut>client=QUARANTINED, raw=QUARANTINED, direct Senso w/o key=403</td></tr><tr><td>Revocation (immediate)</td><td class=pass>PASS</td><td class=mut>Alpha direct read 200 -&gt; 404 right after revoke</td></tr><tr><td>Useful work (public note, valid source link)</td><td class=pass>PASS</td><td class=mut>report HTTP 200, source link present=True</td></tr><tr><td>Audit privacy (no canary/address/token/query in analytics or logs)</td><td class=pass>PASS</td><td class=mut>23 audit events scanned; forbidden strings found: 0</td></tr></tbody></table></div>
+</main>
