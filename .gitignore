@@ -17,6 +17,9 @@ venv/
 
 # installed agent skills (third-party)
 .agents/
+.gateway-admin.json
+.aws-sam/
+.pytest_cache/
 
 # gateway operator secrets and issued run tokens
 .gateway-*
