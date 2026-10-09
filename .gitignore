@@ -1,0 +1,16 @@
+# internal strategy — not for the public coordination repo
+research/
+SPONSORS.md
+build/
+.playwright-mcp/
+# secrets / local
+.env
+*.env
+**/senso/config.json
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# os
+.DS_Store
