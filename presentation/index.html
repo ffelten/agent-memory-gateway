@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b0e14" />
+    <meta
+      name="description"
+      content="One shared memory, two very different outcomes. Explore a recorded Agent Memory Gateway incident with verified decision receipts."
+    />
+    <title>Memory Gateway — One memory. Two outcomes.</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23b9f6ce'/%3E%3Cpath d='M11 27V13h5l4 7 4-7h5v14h-5v-7l-4 6-4-6v7z' fill='%230b0e14'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="evidence.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body data-active-scene="0">
+    <a class="skip-link" href="#incident-stage">Skip to the incident</a>
+    <svg
+      class="icon-library"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <symbol id="i-memory" viewBox="0 0 24 24">
+        <rect x="5" y="5" width="14" height="14" rx="4" />
+        <path
+          d="M9 9h6v6H9zM9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3m14-6h3m-3 6h3"
+        />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h14m-5-5 5 5-5 5" />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24">
+        <path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <path d="M9 5v14m7-14v14" stroke-width="3" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="10" width="14" height="11" rx="3" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" />
+      </symbol>
+      <symbol id="i-unlock" viewBox="0 0 24 24">
+        <rect x="5" y="10" width="14" height="11" rx="3" />
+        <path d="M8 10V7a4 4 0 0 1 7.5-2m-3.5 10v2" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-document" viewBox="0 0 24 24">
+        <path
+          d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 0v6h6M8 13h8m-8 4h5"
+        />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+      <symbol id="i-key" viewBox="0 0 24 24">
+        <circle cx="8" cy="9" r="5" />
+        <path d="m12 13 8 8m-5-5 3-3m0 6 3-3" />
+      </symbol>
+      <symbol id="i-external" viewBox="0 0 24 24">
+        <path
+          d="M14 4h6v6m-9 3 9-9M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"
+        />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M6 18 18 6" />
+      </symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24">
+        <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />
+      </symbol>
+      <symbol id="i-stack" viewBox="0 0 24 24">
+        <path d="m12 3 10 5-10 5L2 8zm-9 9 9 5 9-5m-18 5 9 5 9-5" />
+      </symbol>
+    </svg>
+
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="./" aria-label="Memory Gateway home"
+          ><span class="brand-mark"
+            ><svg><use href="#i-memory" /></svg></span
+          ><span>memory<span class="brand-secondary">gateway</span></span></a
+        >
+        <div class="header-actions">
+          <span class="recorded-label"
+            ><span class="status-dot"></span> Recorded evidence</span
+          ><button class="quiet-button" id="evidence-button" type="button">
+            View receipts <svg><use href="#i-external" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="headline">
+          <div class="hero-copy">
+            <p class="eyebrow">
+              <span class="tiny-line"></span> SHARED MEMORY. PRIVATE BOUNDARIES.
+            </p>
+            <h1 id="headline">
+              One memory.<br /><span
+                >Two very different<br class="desktop-break" />
+                outcomes.</span
+              >
+            </h1>
+            <p class="hero-description">
+              An agent remembers a customer credential.<br />Watch what happens
+              when another agent finds it.
+            </p>
+          </div>
+          <div class="hero-action">
+            <div class="orbit-illustration" aria-hidden="true">
+              <div class="orbit orbit-one"></div>
+              <div class="orbit orbit-two"></div>
+              <div class="orbit-core">
+                <svg><use href="#i-shield" /></svg>
+              </div>
+              <span class="orbit-node orbit-node-one"></span
+              ><span class="orbit-node orbit-node-two"></span
+              ><span class="orbit-caption"
+                >KNOWLEDGE FLOWS.<br />PERMISSIONS FOLLOW.</span
+              >
+            </div>
+            <button
+              class="primary-button"
+              id="replay"
+              type="button"
+              aria-pressed="false"
+            >
+              <span class="play-icon"
+                ><svg id="play-glyph"><use href="#i-play" /></svg></span
+              ><span id="play-label">Replay the incident</span
+              ><span class="button-duration">~40 sec</span>
+            </button>
+            <p class="replay-note">A guided replay of recorded outcomes.</p>
+          </div>
+        </section>
+
+        <section class="incident" aria-label="Interactive incident replay">
+          <div
+            class="chapter-tabs"
+            role="tablist"
+            aria-label="Incident chapters"
+          >
+            <button
+              id="chapter-0"
+              class="chapter is-active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="incident-stage"
+              data-scene="0"
+              tabindex="0"
+            >
+              <span class="chapter-number">01</span
+              ><span class="chapter-label"
+                >The boundary<small>Who can see what?</small></span
+              ><span class="chapter-track"></span>
+            </button>
+            <button
+              id="chapter-1"
+              class="chapter"
+              role="tab"
+              aria-selected="false"
+              aria-controls="incident-stage"
+              data-scene="1"
+              tabindex="-1"
+            >
+              <span class="chapter-number">02</span
+              ><span class="chapter-label"
+                >The leak<small>A note carries a key.</small></span
+              ><span class="chapter-track"></span>
+            </button>
+            <button
+              id="chapter-2"
+              class="chapter"
+              role="tab"
+              aria-selected="false"
+              aria-controls="incident-stage"
+              data-scene="2"
+              tabindex="-1"
+            >
+              <span class="chapter-number">03</span
+              ><span class="chapter-label"
+                >The protection<small
+                  >Same note. A different outcome.</small
+                ></span
+              ><span class="chapter-track"></span>
+            </button>
+            <button
+              id="chapter-3"
+              class="chapter"
+              role="tab"
+              aria-selected="false"
+              aria-controls="incident-stage"
+              data-scene="3"
+              tabindex="-1"
+            >
+              <span class="chapter-number">04</span
+              ><span class="chapter-label"
+                >Useful work<small>Keep the knowledge useful.</small></span
+              ><span class="chapter-track"></span>
+            </button>
+          </div>
+
+          <div
+            id="incident-stage"
+            role="tabpanel"
+            aria-labelledby="chapter-0"
+            tabindex="-1"
+          >
+            <div class="stage-heading">
+              <div>
+                <span class="scene-kicker" id="scene-kicker"
+                  >01 / THE BOUNDARY</span
+                >
+                <h2 id="scene-title">Different customers. Different access.</h2>
+              </div>
+              <span class="synthetic-label"
+                ><span class="mini-square"></span> Synthetic customer data</span
+              >
+            </div>
+            <div class="comparison">
+              <article
+                class="lane lane-baseline"
+                id="baseline-lane"
+                aria-labelledby="baseline-heading"
+              >
+                <div class="lane-heading">
+                  <h3 id="baseline-heading">
+                    <span class="lane-dot"></span>Without the gateway
+                  </h3>
+                  <span class="mode-label">Local mock baseline</span>
+                </div>
+                <p class="lane-description" id="baseline-description">
+                  Beta’s own credential cannot open Alpha’s record.
+                </p>
+                <div class="flow-diagram" aria-label="Baseline request path">
+                  <div class="flow-node agent-node">
+                    <span class="node-visual avatar"
+                      >B<span class="avatar-status"></span></span
+                    ><strong id="baseline-agent">Agent Beta</strong
+                    ><span class="node-detail">Customer Beta</span>
+                  </div>
+                  <div class="connector" aria-hidden="true">
+                    <span></span><svg><use href="#i-arrow" /></svg>
+                  </div>
+                  <div class="flow-node memory-node" id="baseline-memory">
+                    <span class="node-visual"
+                      ><svg id="baseline-memory-icon">
+                        <use href="#i-key" /></svg></span
+                    ><strong id="baseline-memory-label">Own credential</strong
+                    ><span class="node-detail" id="baseline-memory-detail"
+                      >Beta access only</span
+                    >
+                  </div>
+                  <div class="connector" aria-hidden="true">
+                    <span></span><svg><use href="#i-arrow" /></svg>
+                  </div>
+                  <div class="flow-node record-node" id="baseline-record">
+                    <span class="node-visual"
+                      ><svg id="baseline-record-icon">
+                        <use href="#i-lock" /></svg></span
+                    ><strong>Alpha’s record</strong
+                    ><span class="node-detail" id="baseline-record-detail"
+                      >Private customer data</span
+                    >
+                  </div>
+                </div>
+                <div class="memory-fragment" id="baseline-fragment">
+                  <svg><use href="#i-document" /></svg
+                  ><span id="baseline-fragment-text"
+                    >Access belongs to a customer, not to shared memory.</span
+                  >
+                </div>
+                <div class="result-row" id="baseline-result">
+                  <span class="result-icon"
+                    ><svg id="baseline-result-icon"><use href="#i-lock" /></svg
+                  ></span>
+                  <div class="result-copy">
+                    <span class="result-kicker" id="baseline-result-kicker"
+                      >CUSTOMER API</span
+                    ><strong id="baseline-result-title">Access denied</strong>
+                  </div>
+                  <span class="response-code" id="baseline-code"
+                    >403<span>FORBIDDEN</span></span
+                  >
+                </div>
+              </article>
+
+              <article
+                class="lane lane-protected"
+                id="protected-lane"
+                aria-labelledby="protected-heading"
+              >
+                <div class="lane-heading">
+                  <h3 id="protected-heading">
+                    <span class="lane-dot"></span>With Memory Gateway
+                  </h3>
+                  <span class="mode-label">Recorded AWS run</span>
+                </div>
+                <p class="lane-description" id="protected-description">
+                  The same customer boundary applies to every agent.
+                </p>
+                <div class="flow-diagram" aria-label="Protected request path">
+                  <div class="flow-node agent-node">
+                    <span class="node-visual avatar"
+                      >B<span class="avatar-status"></span></span
+                    ><strong id="protected-agent">Agent Beta</strong
+                    ><span class="node-detail" id="protected-agent-detail"
+                      >Customer Beta</span
+                    >
+                  </div>
+                  <div class="connector" aria-hidden="true">
+                    <span></span><svg><use href="#i-arrow" /></svg>
+                  </div>
+                  <div class="flow-node memory-node" id="protected-memory">
+                    <span class="node-visual"
+                      ><svg id="protected-memory-icon">
+                        <use href="#i-shield" /></svg></span
+                    ><strong id="protected-memory-label"
+                      >Permission check</strong
+                    ><span class="node-detail" id="protected-memory-detail"
+                      >Identity stays scoped</span
+                    >
+                  </div>
+                  <div class="connector" aria-hidden="true">
+                    <span></span><svg><use href="#i-arrow" /></svg>
+                  </div>
+                  <div class="flow-node record-node" id="protected-record">
+                    <span class="node-visual"
+                      ><svg id="protected-record-icon">
+                        <use href="#i-lock" /></svg></span
+                    ><strong id="protected-record-label">Alpha’s record</strong
+                    ><span class="node-detail" id="protected-record-detail"
+                      >Private customer data</span
+                    >
+                  </div>
+                </div>
+                <div class="memory-fragment" id="protected-fragment">
+                  <svg><use href="#i-shield" /></svg
+                  ><span id="protected-fragment-text"
+                    >The gateway checks the caller’s source permissions.</span
+                  >
+                </div>
+                <div class="result-row" id="protected-result">
+                  <span class="result-icon"
+                    ><svg id="protected-result-icon"><use href="#i-lock" /></svg
+                  ></span>
+                  <div class="result-copy">
+                    <span class="result-kicker" id="protected-result-kicker"
+                      >CUSTOMER API</span
+                    ><strong id="protected-result-title">Access denied</strong>
+                  </div>
+                  <span class="response-code" id="protected-code"
+                    >403<span>FORBIDDEN</span></span
+                  >
+                </div>
+              </article>
+            </div>
+            <div class="story-footer">
+              <p class="story-line" id="story-line" aria-live="polite">
+                Beta works for a different customer. The first request is
+                correctly denied.
+              </p>
+              <div class="scene-controls">
+                <button
+                  id="prev"
+                  class="icon-button"
+                  aria-label="Previous chapter"
+                  disabled
+                >
+                  <svg class="rotate"><use href="#i-arrow" /></svg></button
+                ><button
+                  id="stage-play"
+                  class="icon-button"
+                  aria-label="Play recorded replay"
+                  aria-pressed="false"
+                >
+                  <svg id="stage-play-glyph">
+                    <use href="#i-play" />
+                  </svg></button
+                ><span id="scene-count">01 <span>/ 04</span></span
+                ><button
+                  id="next"
+                  class="icon-button"
+                  aria-label="Next chapter"
+                >
+                  <svg><use href="#i-arrow" /></svg></button
+                ><button
+                  id="fullscreen"
+                  class="icon-button fullscreen-button"
+                  aria-label="Enter full screen"
+                >
+                  <svg><use href="#i-expand" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="proof-section" aria-labelledby="proof-heading">
+          <div class="proof-heading">
+            <div>
+              <p class="eyebrow">PROTECTION THAT STILL LETS YOU WORK</p>
+              <h2 id="proof-heading">
+                The boundary holds.<br />The work goes on.
+              </h2>
+            </div>
+            <p>
+              Three outcomes that matter.<br />One incident you can explain.
+            </p>
+          </div>
+          <div class="outcome-grid">
+            <article class="outcome-card">
+              <span class="outcome-icon"
+                ><svg><use href="#i-shield" /></svg></span
+              ><span class="outcome-number">01</span>
+              <h3>Credential blocked.</h3>
+              <p>
+                The entire unsafe write is quarantined before searchable memory.
+              </p>
+              <span class="proof-tag"><span></span> SECRET_MATCH</span>
+            </article>
+            <article class="outcome-card">
+              <span class="outcome-icon violet"
+                ><svg><use href="#i-lock" /></svg></span
+              ><span class="outcome-number">02</span>
+              <h3>Private access preserved.</h3>
+              <p>
+                Approved Alpha memory stays available to Alpha. Beta’s lookup is
+                denied.
+              </p>
+              <div class="access-pair">
+                <span>Alpha <b>200</b></span
+                ><span>Beta <b class="coral-text">404</b></span>
+              </div>
+            </article>
+            <article class="outcome-card">
+              <span class="outcome-icon"
+                ><svg><use href="#i-document" /></svg></span
+              ><span class="outcome-number">03</span>
+              <h3>A public task completed.</h3>
+              <p>
+                A fresh public-only context publishes a note with an approved
+                source.
+              </p>
+              <a
+                class="source-link"
+                href="https://docs.senso.ai/docs/knowledge-base"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Explore the public source
+                <svg><use href="#i-external" /></svg></a
+              ><a
+                class="source-link report-link"
+                id="report-link"
+                hidden
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open published note <svg><use href="#i-external" /></svg
+              ></a>
+            </article>
+          </div>
+        </section>
+
+        <section class="receipt-strip" aria-label="Verified evidence summary">
+          <div class="receipt-intro">
+            <svg><use href="#i-stack" /></svg>
+            <div>
+              <strong>The receipts are here.</strong
+              ><span>Actual gateway decisions. Recorded in ClickHouse.</span>
+            </div>
+          </div>
+          <div class="receipt-numbers">
+            <span><b id="trace-count">—</b> traces</span
+            ><span><b id="allow-count">—</b> allowed</span
+            ><span><b id="blocked-count">—</b> quarantined</span>
+          </div>
+          <button class="quiet-button" id="receipts-secondary">
+            Inspect evidence <svg><use href="#i-arrow" /></svg>
+          </button>
+        </section>
+
+        <footer class="site-footer">
+          <span class="footer-claim"
+            >Share knowledge. Keep the boundaries.</span
+          >
+          <div class="sponsor-list" aria-label="Project integrations">
+            <span>AWS</span><span>Senso</span><span>AkashML</span
+            ><span>ClickHouse</span>
+          </div>
+          <p>
+            Illustrated incident replay · synthetic fixtures · real
+            protected-run receipts
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">INSPECT THE RECEIPTS</p>
+          <h2 id="evidence-title">A decision you can verify.</h2>
+        </div>
+        <button
+          class="icon-button"
+          id="close-evidence"
+          aria-label="Close evidence"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <p class="evidence-description">
+        These metadata-only events were read back from ClickHouse for the
+        recorded protected run. The diagram illustrates the incident; replay
+        does not make new API calls.
+      </p>
+      <div class="evidence-status" id="evidence-status"></div>
+      <div
+        class="table-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="Gateway events"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Operation / trace</th>
+              <th>Decision</th>
+              <th>Gate</th>
+              <th>Senso</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="evidence-rows"></tbody>
+        </table>
+      </div>
+      <div class="evidence-limits">
+        <h3>What this evidence covers</h3>
+        <ul id="evidence-limits"></ul>
+      </div>
+      <p class="evidence-time" id="evidence-time"></p>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
