@@ -14,3 +14,6 @@ __pycache__/
 venv/
 # os
 .DS_Store
+
+# installed agent skills (third-party)
+.agents/
