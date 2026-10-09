@@ -103,7 +103,7 @@ footer{margin-top:40px;font-size:13px;color:var(--mut)}
 <div class="result bad"><div class=k>Breach</div><div class=t>Beta read Alpha's customer record</div><dl><div><dt>Name</dt><dd>Avery Example</dd></div><div><dt>Purchase</dt><dd>Service Plan A</dd></div><div><dt>Address</dt><dd>100 Ex••••• Lane</dd></div></dl></div></div>
 <div class="col good"><h3>With the gateway</h3>
 <ol class=steps style="padding-left:0"><li>Gateway checks the note<small>Finds a credential</small></li><li>Quarantines it before storage<small>Nothing is saved to shared memory</small></li><li>Beta searches memory<small>Nothing found</small></li></ol>
-<div class="result good"><div class=k>Blocked</div><div class=t>The key never reached shared memory</div><div class=mut style="font-size:15px">Beta searched and found nothing.</div></div></div>
+<div class="result good"><div class=k>Blocked</div><div class=t>The key never reached shared memory</div><div class=mut style="font-size:15px">Beta searched and found nothing.</div></div><p class=small>Ran against the live AWS gateway.</p></div>
 </div>
 <p class=small>A Python script calling the API directly got the same answer: the gateway is the only door.</p>
 </section>
@@ -111,7 +111,7 @@ footer{margin-top:40px;font-size:13px;color:var(--mut)}
 <section>
 <p class=lbl>Work still gets done</p>
 <h2>Beta&#x27;s agent then published a troubleshooting note using only the public runbook.</h2>
-<div class="card" style="border-color:var(--goodline)"><div class="lbl" style="color:var(--good)">Done</div><p><b>Firmware sync troubleshooting (public runbook)</b></p><p><b>Troubleshooting Note – Device Won’t Sync After Firmware Update</b></p><p>1. <b>Power‑cycle the device</b> – Turn the device off, wait a few seconds, then turn it back on. 2. <b>Re‑pair the device</b> – Remove the existing pairing and pair the device again with the gateway/hub. 3. <b>Trigger a manual sync</b> – Initiate a manual synchronization from the device or management console.</p><p>If the device still fails to sync after completing these steps, further investigation may be required.</p><p class=small style="color:var(--muted,#666)">Published by the gateway's report route during this run.</p><p class=small>Source: <a href="https://docs.senso.ai/docs/knowledge-base">https://docs.senso.ai/docs/knowledge-base</a></p></div>
+<div class="card" style="border-color:var(--goodline)"><div class="lbl" style="color:var(--good)">Done</div><p><b>Firmware sync troubleshooting (public runbook)</b></p><p><b>Senso Knowledge‑Base Troubleshooting Note</b></p><p>---</p><p><b>1. Document not searchable after upload</b></p><p><b>Possible reasons</b></p><ul><li>Ingestion/compilation is still in progress.</li><li>The node was moved to a folder the API key cannot see.</li></ul><p>…</p><p class=small style="color:var(--muted,#666)">Published by the gateway's report route during this run.</p><p class=small>Source: <a href="https://docs.senso.ai/docs/knowledge-base">https://docs.senso.ai/docs/knowledge-base</a></p></div>
 </section>
 
 <section>
@@ -121,14 +121,12 @@ footer{margin-top:40px;font-size:13px;color:var(--mut)}
 
 <details>
 <summary>Evidence for judges: real run data</summary>
-<p class=mut>Generated 2026-10-09 14:43:10 from a live run against the mock gateways and a synthetic CRM. All data is synthetic. Credentials shown as <code>DEMO_SECRET_***</code>. Overall: <span class="pass">ALL PASS</span></p>
-<h4>Decision and timing trace (metadata only)</h4>
-<p class=mut>Operation, transport, decision, reason code and measured timings. No secret, address, query or token. Timings are measured from the mock gateway (23 events); ClickHouse is not connected in this run.</p>
-<div class=tw><table id="analytics"><thead><tr><th>namespace</th><th>operation</th><th>transport</th><th>decision</th><th>reason_code</th><th class=num>gate_ms</th><th class=num>total_ms</th></tr></thead><tbody><tr><td>unprotected</td><td>create_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.07</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.38</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.03</td></tr><tr><td>unprotected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.03</td></tr><tr><td>unprotected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>create_memory</td><td>mcp</td><td class=fail>DENY</td><td>SECRET_MATCH</td><td class=num>0.00</td><td class=num>0.07</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.07</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.01</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.01</td></tr><tr><td>protected</td><td>create_memory</td><td>script</td><td class=fail>DENY</td><td>SECRET_MATCH</td><td class=num>0.00</td><td class=num>0.04</td></tr><tr><td>protected</td><td>create_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.01</td><td class=num>0.05</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.03</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>revoke</td><td>mcp</td><td class=pass>ALLOW</td><td>DEMO_REVOKE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>get_memory</td><td>mcp</td><td class=fail>DENY</td><td>NOT_READABLE</td><td class=num>0.00</td><td class=num>0.00</td></tr><tr><td>protected</td><td>search</td><td>mcp</td><td class=pass>ALLOW</td><td>OK</td><td class=num>0.00</td><td class=num>0.02</td></tr></tbody></table></div>
+<p class=mut>Generated 2026-10-09 14:56:12 from a live run against the live AWS gateway (protected side), a local mock (unprotected side) and a synthetic CRM. All data is synthetic. Credentials shown as <code>DEMO_SECRET_***</code>. Overall: <span class="pass">ALL PASS</span></p>
+<h4>Gateway trace IDs (metadata only)</h4><p class=mut>Trace IDs returned by the live AWS gateway for this run's protected calls. No secret, address, query or token. The gateway's own audit store holds the decisions and timings.</p><div class=tw><table id="gateway-traces"><thead><tr><th>step</th><th>gateway trace ID</th></tr></thead><tbody><tr><td>protected write (client path)</td><td><code>9da640d2eaf9401da6ad923b8e16377e</code></td></tr><tr><td>Beta search (protected)</td><td><code>e050dd1aae454e27b824c422d375a9f9</code></td></tr><tr><td>guessed-ID lookup</td><td><code>08d511613c034f0c91def382bbb3b11c</code></td></tr><tr><td>bypass script write</td><td><code>c0f82d4f8ca3487b9a168ce89078982c</code></td></tr><tr><td>clean Alpha note write</td><td><code>466b1370825d4684b8a4e3e96056cf39</code></td></tr><tr><td>admin revoke</td><td><code>44e5e19192ac48aaba04a9b754200117</code></td></tr><tr><td>public report</td><td><code>300a3abf08bc47d8897c416d22a77a30</code></td></tr></tbody></table></div>
 <h4>Acceptance checks</h4>
-<div class=tw><table><thead><tr><th>check</th><th>result</th><th>evidence</th></tr></thead><tbody><tr><td>Access baseline (Beta 403 / Alpha 200)</td><td class=pass>PASS</td><td>Beta=403 Alpha=200</td></tr><tr><td>Actual breach baseline</td><td class=pass>PASS</td><td>canary_found=True CRM=200</td></tr><tr><td>Same-input hash match</td><td class=pass>PASS</td><td>sha256 63e09cf2ec899a67... identical in both namespaces</td></tr><tr><td>Secret admission (quarantined, not readable)</td><td class=pass>PASS</td><td>state=QUARANTINED B results=0 A results=0</td></tr><tr><td>Permission preservation</td><td class=pass>PASS</td><td>A hits=1; B hits=0, B direct=404</td></tr><tr><td>Script parity (MCP vs Python HTTP)</td><td class=pass>PASS</td><td>client=QUARANTINED, raw=QUARANTINED, direct Senso w/o key=403</td></tr><tr><td>Revocation (immediate)</td><td class=pass>PASS</td><td>Alpha direct read 200 -&gt; 404 right after revoke</td></tr><tr><td>Useful work (public note, valid source link)</td><td class=pass>PASS</td><td>report HTTP 200, source link present=True</td></tr><tr><td>Audit privacy (no canary/address/token/query in analytics or logs)</td><td class=pass>PASS</td><td>23 audit events scanned; forbidden strings found: 0</td></tr></tbody></table></div>
+<div class=tw><table><thead><tr><th>check</th><th>result</th><th>evidence</th></tr></thead><tbody><tr><td>Access baseline (Beta 403 / Alpha 200)</td><td class=pass>PASS</td><td>Beta=403 Alpha=200</td></tr><tr><td>Actual breach baseline</td><td class=pass>PASS</td><td>canary_found=True CRM=200</td></tr><tr><td>Same-input hash match</td><td class=pass>PASS</td><td>sha256 7c5e922a7128b40e... identical in both namespaces</td></tr><tr><td>Secret admission (quarantined, not readable)</td><td class=pass>PASS</td><td>state=QUARANTINED B results=0 A results=0</td></tr><tr><td>Permission preservation</td><td class=pass>PASS</td><td>A hits=1; B hits=0, B direct=404</td></tr><tr><td>Script parity (MCP vs Python HTTP)</td><td class=pass>PASS</td><td>client=QUARANTINED, raw=QUARANTINED, direct Senso w/o key=403</td></tr><tr><td>Revocation (immediate)</td><td class=pass>PASS</td><td>Alpha direct read 200 -&gt; 404 right after revoke</td></tr><tr><td>Useful work (public note, valid source link)</td><td class=pass>PASS</td><td>report HTTP 200, source link present=True</td></tr><tr><td>Audit privacy (no canary/address/token/query in analytics or logs)</td><td class=pass>PASS</td><td>5 audit events scanned; forbidden strings found: 0</td></tr></tbody></table></div>
 <h4>Frozen candidate SHA-256 (identical in both namespaces)</h4>
-<p><code>63e09cf2ec899a672d1870bdcfe27b298a9bedf0e226837be2bf1137b62d29b1</code><br><span class=mut>unprotected <code>63e09cf2ec899a672d1870bdcfe27b298a9bedf0e226837be2bf1137b62d29b1</code><br>protected <code>63e09cf2ec899a672d1870bdcfe27b298a9bedf0e226837be2bf1137b62d29b1</code></span></p>
+<p><code>7c5e922a7128b40ee9ecb022dd9e2a5ef7be0f108abbfe7edcae7360ec9cb762</code><br><span class=mut>unprotected <code>7c5e922a7128b40ee9ecb022dd9e2a5ef7be0f108abbfe7edcae7360ec9cb762</code><br>protected <code>7c5e922a7128b40ee9ecb022dd9e2a5ef7be0f108abbfe7edcae7360ec9cb762</code></span></p>
 <h4>Access baseline</h4>
 <pre>Beta credential  GET /customers/alpha -> HTTP 403
 Alpha credential GET /customers/alpha -> HTTP 200</pre>
@@ -136,8 +134,8 @@ Alpha credential GET /customers/alpha -> HTTP 200</pre>
 <pre>{
   &quot;results&quot;: [
     {
-      &quot;memory_id&quot;: &quot;mem-7ac95d616196&quot;,
-      &quot;text&quot;: &quot;**Troubleshooting Summary \u2013 Incident: Service Plan\u202fA \u2013 Device Sync Failure After Firmware Update**\n\n| Item | Details |\n|------|---------|\n| **Customer** | Alpha |\n| **Issue** | Device is unable to sync after applying the latest firmware update. |\n| **Root Cause (suspected)** | Firmware update left the device in a stale pairing state, preventing normal sync operations. |\n| **Actions Taken (per public runbook)** | 1. **Power\u2011cycled the device** \u2013 turned it off, waited 30\u202fseconds, then powered it back on.&lt;br&gt;2. **Re\u2011paired the device** to the customer\u2019s account/ hub, removing the old pairing and establishing a fresh one.&lt;br&gt;3. **Triggered a manual sync** from the management console to verify connectivity. |\n| **Result** | The device successfully completed the manual sync and is now reporting normal status. |\n| **Next Steps** | \u2022 Monitor the device for the next 24\u202fhours to ensure sync stabil&quot;,
+      &quot;memory_id&quot;: &quot;mem-e66869bcd4d9&quot;,
+      &quot;text&quot;: &quot;**Customer:** Alpha (Service Plan\u202fA)  \n**Issue:** Device fails to sync after latest firmware update.\n\n**Troubleshooting Summary**\n\n1. **Confirm Firmware Update** \u2013 Verify the device reports the expected firmware version and that the update completed without errors.  \n2. **Power\u2011Cycle the Device** \u2013 Unplug the device (or use the power\u2011off button), wait ~30\u202fseconds, then power it back on. This clears any residual state from the update.  \n3. **Re\u2011pair the Device**  \n   - Open the companion app / management console.  \n   - Remove the device from the paired device list.  \n   - Initiate a fresh pairing sequence (follow the on\u2011screen QR\u2011code or Bluetooth pairing steps).  \n4. **Trigger a Manual Sync** \u2013 Once re\u2011paired, use the \u201cSync Now\u201d or equivalent command in the app/console to start an immediate synchronization.  \n5. **Validate Success** \u2013 Confirm that data/telemetry appears in the cloud das&quot;,
       &quot;source_urls&quot;: [
         &quot;https://docs.senso.ai/docs/knowledge-base&quot;
       ]
@@ -153,7 +151,8 @@ address: [REDACTED]</pre>
 <pre>write -> state: QUARANTINED
 reason_codes: [&#x27;SECRET_MATCH&#x27;]
 search: {
-  &quot;results&quot;: []
+  &quot;results&quot;: [],
+  &quot;trace_id&quot;: &quot;e050dd1aae454e27b824c422d375a9f9&quot;
 }
 guessed-ID lookup: HTTP 404
 credential found: False  CRM called: False</pre>
@@ -164,13 +163,91 @@ direct Senso write without backend key: 403</pre>
 <h4>Permissions preserved</h4>
 <pre>Alpha hits: 1   Beta hits: 0   Beta direct ID: HTTP 404</pre>
 <h4>Published note</h4>
-<pre>Firmware sync troubleshooting (public runbook)  Firmware sync troubleshooting (public runbook)  **Troubleshooting Note – Device Won’t Sync After Firmware Update**
+<pre>Firmware sync troubleshooting (public runbook)  Firmware sync troubleshooting (public runbook)  **Senso Knowledge‑Base Troubleshooting Note**  
 
-1. **Power‑cycle the device** – Turn the device off, wait a few seconds, then turn it back on.  
-2. **Re‑pair the device** – Remove the existing pairing and pair the device again with the gateway/hub.  
-3. **Trigger a manual sync** – Initiate a manual synchronization from the device or management console.
+---
 
-If the device still fails to sync after completing these steps, further investigation may be required.
+### 1. Document not searchable after upload  
+**Possible reasons**  
+- Ingestion/compilation is still in progress.  
+- The node was moved to a folder the API key cannot see.  
+
+**What to do**  
+1. **Poll the compile status** – call `GET /org/kb/nodes/{id}` and check `content.processing_status`.  
+   - Keep polling every ~15 seconds until the status reads **complete**.  
+2. If the node was moved, verify the key’s folder permissions (see *Permissions*).  
+   - Use `GET /org/api-keys/{key_id}/kb-permissions` to confirm the key can see the target folder.  
+
+---
+
+### 2. “404 – node missing, or no permission for it” error  
+**Why it happens**  
+- The requested node does not exist **or** the API key lacks access to that folder.  
+- Senso deliberately returns the same message for both cases to prevent probing.  
+
+**Remedy**  
+- Confirm the node ID is correct (node IDs identify positions in the tree).  
+- Check the key’s KB scope on the **API Keys** page under *KB Access*.  
+
+---
+
+### 3. Duplicate‑document error (409)  
+**Cause**  
+- Uploading text that is identical to an existing document.  
+
+**Fix**  
+- Do not re‑upload the same markdown/plain‑text.  
+- If an update is required, fetch the current version (`GET /org/kb/nodes/{id}/content`), modify the content, and POST the **full new version** (updates replace the body, they don’t append).  
+
+---
+
+### 4. Move or delete appears not to take effect immediately  
+**Explanation**  
+- Moves and deletes are queued, not instantaneous.  
+- Answers may still reference the document until the queue settles.  
+
+**Steps to verify**  
+1. Call `GET /org/kb/sync-status` and wait until `syncing` is **false** (org‑wide structural changes).  
+2. For a single document, keep polling `GET /org/kb/nodes/{id}` and read `content.processing_status`.  
+
+---
+
+### 5. Permission‑related “403 – the key has no grant covering that node”  
+**Root cause**  
+- The API key is scoped to a folder that does not include the target node.  
+
+**Resolution**  
+- Scope the key to the appropriate folder on the **API Keys** page (requires a signed‑in session).  
+- Re‑query the key’s permissions to ensure the folder is included.  
+
+---
+
+### 6. Version‑related confusion (node id vs. content id)  
+**Issue**  
+- Supplying a content ID where a node ID is expected (or vice‑versa) – the most common integration mistake.  
+
+**Check**  
+- Node IDs refer to tree positions (documents or folders).  
+- Content IDs appear in search results and identify compiled content for citation.  
+
+**Fix**  
+- Verify you are using the correct identifier for each endpoint.  
+
+---
+
+### Quick CLI checks  
+
+| Task | CLI command |
+|------|-------------|
+| List top‑level files | `senso kb my-files --output json` |
+| Create a folder | `senso kb create-folder --name &amp;quot;Policies&amp;quot;` |
+| Find a document | `senso kb find --query &amp;quot;refund&amp;quot;` |
+| Upload a file | `senso kb upload handbook.pdf --folder-id &amp;lt;id&amp;gt;` |
+| Re‑process after move/delete | `senso ingest reprocess &amp;lt;node-id&amp;gt;` |
+
+---  
+
+**When all above steps fail:** capture the exact request/response, double‑check API key scope, and raise a ticket with the Senso support portal, attaching the node ID, content ID (if applicable), and any error codes returned.
 
 Source: https://docs.senso.ai/docs/knowledge-base  Sources    https://docs.senso.ai/docs/knowledge-base
 HTTP 200</pre>

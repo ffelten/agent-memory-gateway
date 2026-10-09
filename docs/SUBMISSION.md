@@ -35,8 +35,8 @@ We demonstrate the same frozen input twice: without the gateway it causes a real
 - **Senso:** the shared company memory. Admitted knowledge is ingested and retrieved with scoped search (`require_scoped_ids`), and the gateway checks the provider version before returning text. Live ingest → ready → scoped retrieval → delete round trip verified.
 - **AkashML:** inference for both autonomous agents (`openai/gpt-oss-120b`). Real calls verified.
 - **Akash Network:** the demo page runs on Akash compute, deployed with the Console API.
-- **ClickHouse:** metadata-only audit analytics (decision, reason, transport, latency). **[VERIFY: live insert + query from the gateway worker]**
-- **AWS:** API Gateway + Lambda policy gateway, DynamoDB for authoritative state, Secrets Manager isolating every backend key from agents. **[VERIFY: deployed endpoint + live smoke]**
+- **ClickHouse:** metadata-only audit analytics (decision, reason, transport, latency). Live schema, insert and query verified. **[VERIFY: automatic delivery from the deployed gateway]**
+- **AWS:** API Gateway + Lambda policy gateway, DynamoDB for authoritative state, Secrets Manager isolating every backend key from agents. Deployed and verified: the full demo passes all 10 acceptance checks against the live endpoint with real AkashML agents and real Senso.
 
 ## Honest limits (for judges' questions)
 
