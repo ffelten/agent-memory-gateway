@@ -1,5 +1,7 @@
 # Agent Memory Gateway presentation
 
+Public Cloudflare URL: [https://memory-gateway-demo.ashishranjan2404.workers.dev](https://memory-gateway-demo.ashishranjan2404.workers.dev). Deployment instructions: [Cloudflare static hosting](../infra/cloudflare-presentation/README.md).
+
 A standalone incident player with three persistent panes: Alpha, shared memory, and Beta. Open `index.html` directly, or serve it from the repository root:
 
 ```sh
