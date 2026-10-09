@@ -1,0 +1,33 @@
+version: "2.0"
+services:
+  web:
+    image: python:3.12-slim
+    command: ["sh","-c"]
+    args:
+      - "cd /tmp && python3 -c \"import urllib.request; urllib.request.urlretrieve('https://raw.githubusercontent.com/ffelten/agent-memory-gateway/main/demo/output/index.html','index.html')\" && python3 -m http.server 80"
+    expose:
+      - port: 80
+        as: 80
+        to:
+          - global: true
+profiles:
+  compute:
+    web:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 512Mi
+  placement:
+    dcloud:
+      pricing:
+        web:
+          denom: uact
+          amount: 1000
+deployment:
+  web:
+    dcloud:
+      profile: web
+      count: 1
