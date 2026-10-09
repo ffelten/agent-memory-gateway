@@ -20,6 +20,8 @@ import html
 import json
 import os
 import re
+import signal
+import sys
 import threading
 import time
 import uuid
@@ -77,6 +79,8 @@ class Store:
         self.memories = {}    # memory_id -> memory dict
         self.idem = {}        # (principal, run_id, key) -> (content_hash, response, memory_id)
         self.reports = {}     # report_id -> {title, text}
+        self.senso = None     # trusted baseline harness only: real Senso backend (unprotected ns)
+        self.senso_nodes = []  # Senso node ids this process created (cleaned up on exit)
         for run_id, tpl, tok in (("run-alpha", "tpl-alpha", seed_tokens["alpha"]),
                                  ("run-beta", "tpl-beta", seed_tokens["beta"]),
                                  ("run-beta-pub", "tpl-beta-publish", seed_tokens["beta_pub"])):
@@ -113,6 +117,42 @@ class Store:
                 if m["state"] == "INGESTING":  # revoked meanwhile -> stays revoked
                     m["state"] = "APPROVED"
         threading.Thread(target=_go, daemon=True).start()
+
+
+    def senso_ingest_later(self, memory_id):
+        """Real Senso admission: ingest, poll until processed, then APPROVED (or FAILED).
+        Never prints provider bodies or memory text."""
+        def _go():
+            state = "FAILED"
+            try:
+                with self.lock:
+                    m = self.memories[memory_id]
+                    title, text = m["title"], m["text"]
+                t0 = time.perf_counter()
+                r = self.senso.ingest(title, text)
+                if r.get("node_id"):
+                    with self.lock:
+                        self.senso_nodes.append(r["node_id"])
+                        m["node_id"], m["content_id"] = r["node_id"], r["content_id"]
+                    if self.senso.poll_until_ready(r["node_id"], timeout_s=90) == "complete":
+                        state = "APPROVED"
+                        m["ingest_ms"] = round((time.perf_counter() - t0) * 1000)
+            except Exception:  # noqa: BLE001 - provider errors are never surfaced
+                pass
+            with self.lock:
+                if m["state"] == "INGESTING":  # revoked meanwhile -> stays revoked
+                    m["state"] = state
+        threading.Thread(target=_go, daemon=True).start()
+
+    def senso_cleanup(self):
+        n = 0
+        for node in list(self.senso_nodes):
+            try:
+                self.senso.delete(node)
+                n += 1
+            except Exception:  # noqa: BLE001
+                pass
+        return n
 
 
 def make_handler(store):
@@ -259,7 +299,9 @@ def make_handler(store):
                     audience=list(run["audience"]) if store.namespace == "protected" else ["*"], version=1, content_hash=chash,
                     source_urls=[SOURCES[s]["url"] for s in run["source_ids"] if SOURCES[s]["url"]])
                 if state == "INGESTING":
-                    if store.compile_delay > 0:
+                    if store.senso:
+                        store.senso_ingest_later(mem_id)
+                    elif store.compile_delay > 0:
                         store.promote_later(mem_id)
                     else:
                         store.memories[mem_id]["state"] = state = "APPROVED"
@@ -294,6 +336,8 @@ def make_handler(store):
             q, k = d.get("query"), d.get("max_results", 5)
             if not isinstance(q, str) or not isinstance(k, int) or k < 1 or k > 5:
                 return self._send(400, {"error": "query str and max_results 1..5 required"})
+            if store.senso:
+                return self._search_senso(run, q, k, t0)
             words = [w for w in re.findall(r"\w+", q.lower()) if len(w) >= 3]
             scored = []
             with store.lock:
@@ -310,6 +354,28 @@ def make_handler(store):
             store.audit(uuid.uuid4().hex, run["run_id"], None, "search",
                         "ALLOW", "OK", 0.0, (time.perf_counter() - t0) * 1000)
             self._send(200, {"results": results})
+
+        def _search_senso(self, run, q, k, t0):
+            with store.lock:
+                by_cid = {m["content_id"]: m for m in store.memories.values()
+                          if m.get("content_id") and self._readable(m, run)}
+            s0 = time.perf_counter()
+            try:
+                hits = store.senso.search_context(q, list(by_cid), k)
+            except Exception:  # noqa: BLE001 - never echo provider errors
+                return self._send(502, {"error": "backend_unavailable"})
+            senso_ms = (time.perf_counter() - s0) * 1000
+            results, seen = [], set()
+            for h in hits:
+                m = by_cid.get(h["content_id"])
+                if not m or m["memory_id"] in seen or not h.get("chunk_text"):
+                    continue
+                seen.add(m["memory_id"])
+                results.append(dict(memory_id=m["memory_id"], text=h["chunk_text"], source_urls=m["source_urls"],
+                                    application_version=m["version"], backend="senso"))
+            store.audit(uuid.uuid4().hex, run["run_id"], None, "search", "ALLOW", "OK",
+                        0.0, (time.perf_counter() - t0) * 1000)
+            self._send(200, {"results": results[:k]})
 
         def get_memory(self, memory_id):
             run = self._run()
@@ -395,5 +461,18 @@ if __name__ == "__main__":
         admin_token=env("GATEWAY_ADMIN_TOKEN", "admin-demo-token"),
         tokens={"alpha": env("GATEWAY_TOKEN_ALPHA", "tok-alpha"), "beta": env("GATEWAY_TOKEN_BETA", "tok-beta"),
                 "beta_pub": env("GATEWAY_TOKEN_BETA_PUB", "tok-beta-pub")})
-    print(f"MOCK gateway ({ns}) on http://{srv.server_address[0]}:{srv.server_address[1]}", flush=True)
+    backend = "in-memory"
+    if ns == "unprotected" and env("BASELINE_SENSO") == "1":
+        # Trusted baseline harness only: the key lives in this process env, never given to agents.
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "adapters"))
+        from senso_adapter import SensoAdapter
+        srv.store.senso = SensoAdapter(os.environ["SENSO_API_KEY"], os.environ["SENSO_FOLDER_ID"])
+        backend = "real Senso"
+
+        def _bye(*_):
+            print(f"cleanup: deleted {srv.store.senso_cleanup()} Senso nodes", flush=True)
+            os._exit(0)
+        signal.signal(signal.SIGTERM, _bye)
+        signal.signal(signal.SIGINT, _bye)
+    print(f"MOCK gateway ({ns}, {backend}) on http://{srv.server_address[0]}:{srv.server_address[1]}", flush=True)
     srv.serve_forever()

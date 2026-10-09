@@ -28,6 +28,7 @@ import agent_a  # noqa: E402
 import agent_b  # noqa: E402
 import akash_client  # noqa: E402
 import bypass_attempt  # noqa: E402
+import clickhouse_timings  # noqa: E402
 from gateway_client import GatewayClient  # noqa: E402
 
 FIX = agent_a.FIX
@@ -37,9 +38,12 @@ PROT, UNPROT, CRM = "http://127.0.0.1:8808", "http://127.0.0.1:8809", "http://12
 TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN = "tok-alpha", "tok-beta", "tok-beta-pub", "admin-demo-token"
 # Real-gateway mode: GATEWAY_BASE_URL set -> PROTECTED steps go to that gateway with freshly
 # minted run tokens (via demo/mint_runs.py, admin bearer stays in this trusted harness only).
-# Unset -> protected steps use the local mock exactly as before. Unprotected steps always use the mock.
+# Unset -> protected steps use the local mock exactly as before. The unprotected baseline is a separate
+# trusted harness: real Senso when SENSO_API_KEY+SENSO_FOLDER_ID are set (BASELINE_SENSO=0 forces in-memory).
 REAL = bool(os.environ.get("GATEWAY_BASE_URL"))
 PBASE = os.environ["GATEWAY_BASE_URL"].rstrip("/") if REAL else PROT
+BASELINE_SENSO = (os.environ.get("BASELINE_SENSO") != "0"
+                  and bool(os.environ.get("SENSO_API_KEY") and os.environ.get("SENSO_FOLDER_ID")))
 P_TOK_A, P_TOK_B, P_TOK_BPUB, P_ADMIN = TOK_A, TOK_B, TOK_BPUB, TOK_ADMIN
 # Pre-minted mode: no admin bearer available (or GATEWAY_USE_PREMINTED=1), but the gateway owner
 # supplied three run tokens (env, or the gitignored .gateway-runs.env). Minting and the admin
@@ -132,7 +136,7 @@ class Procs:
             p.terminate()
         for p in self.procs:
             try:
-                p.wait(timeout=5)
+                p.wait(timeout=20)  # Senso-backed baseline deletes its nodes on SIGTERM
             except subprocess.TimeoutExpired:
                 p.kill()
 
@@ -206,7 +210,9 @@ def run_story(procs):
     # ---- STEP 3
     step(3, "Breach baseline (UNPROTECTED namespace): Agent B uses the leaked credential")
     mem_u = out_a["create_response"]["memory_id"]
-    st_u = wait_approved(a_unp, mem_u)
+    R["baseline_backend"] = "senso" if BASELINE_SENSO else "mock"
+    print(f"  Baseline backend: {'REAL Senso (unprotected harness)' if BASELINE_SENSO else 'in-memory mock'}")
+    st_u = wait_approved(a_unp, mem_u, timeout=90 if BASELINE_SENSO else None)
     print(f"  Unprotected write state: {out_a['create_response']['state']} -> readiness: {st_u.get('state')}")
     resp_u = b_unp.search(QUERIES[0], 5)
     breach = agent_b.attempt_breach(UNPROT, CRM)
@@ -229,7 +235,7 @@ def run_story(procs):
     cr = a_prot.create_memory(payload["title"], payload["text"], "frozen-" + uuid.uuid4().hex[:8])
     print(f"  Candidate SHA-256 unprotected: {unprot_sent_hash}")
     print(f"  Candidate SHA-256 protected  : {prot_sent_hash}   match={unprot_sent_hash == prot_sent_hash == frozen_hash}")
-    print(f"  Protected write decision (MCP/client path): state={cr.get('state')} reasons={cr.get('reason_codes')}")
+    print(f"  Protected write decision (agent client path): state={cr.get('state')} reasons={cr.get('reason_codes')}")
     resp_p = b_prot.search(QUERIES[0], 5)
     mem_p = cr["memory_id"]
     guess = b_prot.get_memory(mem_p)
@@ -295,7 +301,7 @@ def run_story(procs):
     check("Permission preservation", len(a_find) >= 1 and not b_leak and b_direct.get("_status") == 404
           and a_direct.get("_status", 200) == 200,
           f"A hits={len(a_find)}; B hits={len(b_find)}, B direct={b_direct.get('_status', 200)}")
-    check("Script parity (MCP vs Python HTTP)", parity and senso_denied,
+    check("Script parity (agent client vs raw Python HTTP)", parity and senso_denied,
           f"client={cr.get('state')}, raw={raw.get('state')}, direct Senso w/o key={senso}")
     if PREMINTED:
         check("Revocation (immediate)", SKIP, SKIP_REVOKE)
@@ -305,7 +311,7 @@ def run_story(procs):
 
     # ---- STEP 5
     step(5, "Useful work still happens: Agent B publishes a source-linked public note")
-    work = agent_b.useful_work(PBASE, token=P_TOK_BPUB, create_runbook_memory=REAL)
+    work = agent_b.useful_work(PBASE, token=P_TOK_BPUB)
     url = work["report_url"]
     rep_resp = work.get("response") or {}
     tr("public report", rep_resp)
@@ -314,6 +320,10 @@ def run_story(procs):
     print(f"  Agent B inference: {'STUB (canned note)' if work['llm_stub'] else 'real AkashML'}")
     if work.get("runbook_memory"):
         print(f"  Public runbook memory (public-publishing run): {work['runbook_memory']}")
+    rt = work.get("retrieval") or {}
+    rb = work.get("runbook_memory") or {}
+    print(f"  Retrieved before publishing: memory {rt.get('memory_id')}, matched={rt.get('matched')}, "
+          f"hits={rt.get('hits')}, application_version={rt.get('application_version')}")
     print(f"  Published note URL: {url}  (HTTP {code}, links to public source: {src_url in page})")
     if not url:
         reason = rep_resp.get("error") or rep_resp.get("reason_codes") or rep_resp.get("reason_code") or "no report_url"
@@ -322,9 +332,11 @@ def run_story(procs):
     else:
         report_fail = ""
     R["step5"] = {"url": url, "http": code, "page_text": scrub(re.sub(r"<[^>]+>", " ", page)).strip(),
-                  "llm_stub": work["llm_stub"], "source": src_url}
+                  "llm_stub": work["llm_stub"], "source": src_url, "retrieval": rt}
     check("Useful work (public note, valid source link)", bool(url) and code == 200 and src_url in page
-          and CANARY not in page, report_fail or f"report HTTP {code}, source link present={src_url in page}")
+          and CANARY not in page and rt.get("matched") is True and rb.get("settled_state") == "APPROVED",
+          report_fail or f"report HTTP {code}, source link present={src_url in page}, "
+          f"retrieved matched={rt.get('matched')}, memory state={rb.get('settled_state')}")
 
     # ---- STEP 6
     step(6, "The trace: metadata-only decisions and measured timings")
@@ -334,13 +346,24 @@ def run_story(procs):
         print("   store/ClickHouse, not in this process. Gateway trace IDs returned to this run:)")
         for label, t in traces:
             print(f"  {label:<32}{t}")
+        if clickhouse_timings.configured() and traces:
+            print("  Reading timings back from ClickHouse (gateway_events), waiting up to 60s for async delivery...")
+            ch_rows = clickhouse_timings.fetch([t for _, t in traces], timeout_s=60)
+            got = {r["trace_id"] for r in ch_rows}
+            R["clickhouse"] = {"rows": ch_rows, "delivered": len(got), "expected": len({t for _, t in traces})}
+            print(f"  INFO: ClickHouse delivered {len(got)} of {R['clickhouse']['expected']} traces")
+            for r in ch_rows:
+                print(f"  {r['operation']:<14}{r['transport']:<10}{r['decision']:<9}{r['reason_code']:<14}"
+                      f"gate={r['gate_ms']:.1f} senso={r['senso_ms']:.1f} total={r['total_ms']:.1f} ms  {r['timestamp']}")
+        else:
+            print("  INFO: ClickHouse not configured (CLICKHOUSE_* env); timings not read back")
     with procs.lock:
         events = list(procs.events)
     script_traces = {script_trace} if script_trace else set()
     rows = []
     for e in ([] if REAL else events):
         rows.append(dict(ns=e.get("ns"), operation=e["operation"],
-                         transport="script" if e.get("trace_id") in script_traces else "mcp",
+                         transport="script" if e.get("trace_id") in script_traces else "client",
                          decision=e["decision"], reason_code=e["reason_code"], gate_ms=e["gate_ms"],
                          total_ms=e["total_ms"], trace=str(e.get("trace_id", ""))[:8]))
     R["rows"] = rows
@@ -353,7 +376,7 @@ def run_story(procs):
               f"{r['reason_code']:<14}{r['gate_ms']:>8.2f}{r['total_ms']:>10.2f}")
     if not REAL:
         print("  (timings measured from the MOCK gateway; gate_ms is 0 in the unprotected namespace because admission is skipped)")
-    table_html = decisions_table_html(rows) + traces_html(traces)
+    table_html = decisions_table_html(rows) + traces_html(traces) + clickhouse_html(R.get("clickhouse"), traces)
     with procs.lock:
         blob = "".join(procs.raw_output) + table_html + "\n".join(json.dumps(e) for e in events)
     leaks = [f for f in FORBIDDEN + QUERIES if f in blob]
@@ -508,6 +531,25 @@ def decisions_table_html(rows):
             f"<tbody>{body}</tbody></table></div>")
 
 
+def clickhouse_html(ch, traces):
+    """Timings read back from ClickHouse for this run's trace IDs; empty string when not collected."""
+    if not ch:
+        return ""
+    label = {t: l for l, t in traces}
+    body = "".join(
+        f"<tr><td>{e(label.get(r['trace_id'], ''))}</td><td>{e(r['operation'])}</td><td>{e(r['transport'])}</td>"
+        f"<td class={'fail' if r['decision'] == 'DENY' else 'pass'}>{e(r['decision'])}</td><td>{e(r['reason_code'])}</td>"
+        f"<td class=num>{r['gate_ms']:.2f}</td><td class=num>{r['senso_ms']:.2f}</td><td class=num>{r['total_ms']:.2f}</td>"
+        f"<td>{e(r['timestamp'])}</td></tr>" for r in ch["rows"])
+    return ('<h4>Timings read back from ClickHouse (gateway_events)</h4>'
+            f"<p class=mut>{ch['delivered']} of {ch['expected']} traces delivered. Delivery is asynchronous, so a late "
+            "trace may be missing. Metadata only.</p>"
+            '<div class=tw><table id="clickhouse-timings"><thead><tr><th>step</th><th>operation</th><th>transport</th>'
+            '<th>decision</th><th>reason_code</th><th class=num>gate_ms</th><th class=num>senso_ms</th>'
+            '<th class=num>total_ms</th><th>timestamp (UTC)</th></tr></thead>'
+            f"<tbody>{body}</tbody></table></div>")
+
+
 def traces_html(traces):
     body = "".join(f"<tr><td>{e(l)}</td><td><code>{e(t)}</code></td></tr>" for l, t in traces)
     return ('<div class=tw><table id="gateway-traces"><thead><tr><th>step</th><th>gateway trace ID</th></tr></thead>'
@@ -545,7 +587,7 @@ def build_html(R, checks):
     ok_breach = bool(br.get("canary_found") and br.get("alpha_record_obtained") and br.get("crm_status") == 200)
     ok_block = ck.get("Secret admission (quarantined, not readable)", False)
     ok_same = ck.get("Same-input hash match", False)
-    ok_par = ck.get("Script parity (MCP vs Python HTTP)", False)
+    ok_par = ck.get("Script parity (agent client vs raw Python HTTP)", False)
     ok_work = ck.get("Useful work (public note, valid source link)", False)
     ok_perm = ck.get("Permission preservation", False)
     live_line = f'<p class=small>Ran against the {e(gateway_label())}.</p>' if REAL else ""
@@ -561,6 +603,13 @@ def build_html(R, checks):
          '<span class="chip good">Without gateway: breach did not reproduce in this run</span>')
         + chip(ok_block, "With gateway: blocked before it was stored", "With gateway: NOT blocked (check failed)")
         + chip(ok_work, "Useful work: still completed", "Useful work: did NOT complete (check failed)"))
+
+    def outcome(ok, label):
+        return f'<span class="chip {"good" if ok else "bad"}">{"PASS" if ok else "FAIL"}: {e(label)}</span>'
+
+    outcomes = (outcome(ok_block, "Credential blocked")
+                + outcome(ok_perm, "Legitimate access preserved (Alpha 200 / Beta 404 on the same memory ID)")
+                + outcome(ok_work, "Public task completed"))
 
     if ok_rule:
         rule = '<span class="badge bad">Access denied</span>'
@@ -586,7 +635,7 @@ def build_html(R, checks):
 
     block_steps = ('<li>Gateway checks the note<small>Finds a credential</small></li>'
                    '<li>Quarantines it before storage<small>Nothing is saved to shared memory</small></li>'
-                   '<li>Beta searches memory<small>Nothing found</small></li>') if ok_block else \
+                   '<li>Beta\'s controlled probe searches memory<small>Nothing found</small></li>') if ok_block else \
                   ('<li>Gateway checks the note<small>Expected a quarantine, but the check failed</small></li>')
     if ok_par:
         parity = '<p class=small>A Python script calling the API directly got the same answer: the gateway is the only door.</p>'
@@ -596,7 +645,11 @@ def build_html(R, checks):
     bar = ('<div class="bar good">Same input, byte for byte</div>' if ok_same else
            '<div class="bar bad">The two runs did NOT receive identical input (check failed)</div>')
 
-    work_link = '<p class=small style="color:var(--muted,#666)">Published by the gateway\'s report route during this run.</p>'
+    if s5.get("url") and not any(f and f in s5["url"] for f in FORBIDDEN):
+        work_link = (f'<p class=small>Published report: <a href="{e(s5["url"])}">{e(s5["url"])}</a> '
+                     f'(HTTP {e(s5.get("http"))})</p>')
+    else:
+        work_link = '<p class=small style="color:var(--muted,#666)">Published by the gateway\'s report route during this run.</p>'
     work_cls = "good" if ok_work else "bad"
     pt = re.sub(r"\s+", " ", s5["page_text"]).strip()
     note_title = ""
@@ -632,7 +685,9 @@ def build_html(R, checks):
         trace_section = ("<h4>Gateway trace IDs (metadata only)</h4>"
                          f"<p class=mut>Trace IDs returned by the {e(gateway_label())} for this run's protected calls. "
                          "No secret, address, query or token. The gateway's own audit store holds the decisions and timings.</p>"
-                         + traces_html(R["traces"]))
+                         + traces_html(R["traces"])
+                         + (clickhouse_html(R.get("clickhouse"), R["traces"]) or
+                            "<p class=mut>ClickHouse timings were not read back in this run (CLICKHOUSE_* not configured).</p>"))
     else:
         trace_section = ("<h4>Decision and timing trace (metadata only)</h4>"
                          "<p class=mut>Operation, transport, decision, reason code and measured timings. No secret, address, "
@@ -645,8 +700,9 @@ def build_html(R, checks):
 <main>
 <header>
 <h1>Same agent. Same note. Two outcomes.</h1>
-<p class=sub>An agent's handoff note quietly contained a customer's access key. Without the gateway, another team's agent used it to read that customer's private record. With the gateway, the note never entered shared memory, and the work still got done.</p>
+<p class=sub>An agent's handoff note quietly contained a customer's access key. Without the gateway, a scripted controlled probe standing in for another team's agent used it to read that customer's private record. With the gateway, the note never entered shared memory, and the work still got done.</p>
 <div class=chips>{chips}</div>
+<div class=chips style="margin-top:10px" id=outcomes>{outcomes}</div>
 </header>
 
 <section>
@@ -676,7 +732,7 @@ def build_html(R, checks):
 {bar}
 <div class=split>
 <div class="col bad"><h3>Without the gateway</h3>
-<ol class=steps style="padding-left:0"><li>Beta searches memory</li><li>Finds the note with the key</li><li>Uses the key on Alpha's records</li></ol>
+<ol class=steps style="padding-left:0"><li>Beta's controlled probe searches memory</li><li>Finds the note with the key</li><li>Uses the key on Alpha's records</li></ol>
 {breach_res}</div>
 <div class="col good"><h3>With the gateway</h3>
 <ol class=steps style="padding-left:0">{block_steps}</ol>
@@ -698,7 +754,7 @@ def build_html(R, checks):
 
 <details>
 <summary>Evidence for judges: real run data</summary>
-<p class=mut>Generated {e(time.strftime('%Y-%m-%d %H:%M:%S'))} from a live run against {'the ' + e(gateway_label()) + ' (protected side), a local mock (unprotected side)' if REAL else 'the mock gateways'} and a synthetic CRM. All data is synthetic. Credentials shown as <code>{REDACTED}</code>. Overall: <span class="{'pass' if allp else 'fail'}">{'ALL PASS' if allp else 'FAILURES'}</span></p>
+<p class=mut>Generated {e(time.strftime('%Y-%m-%d %H:%M:%S'))} from a live run against {'the ' + e(gateway_label()) + ' (protected side), ' + ('real Senso through a trusted harness without admission (unprotected baseline)' if R.get('baseline_backend') == 'senso' else 'a local mock (unprotected side)') + '' if REAL else 'the mock gateways'} and a synthetic CRM. All data is synthetic. Credentials shown as <code>{REDACTED}</code>. Overall: <span class="{'pass' if allp else 'fail'}">{'ALL PASS' if allp else 'FAILURES'}</span></p>
 {trace_section}
 <h4>Acceptance checks</h4>
 <div class=tw><table><thead><tr><th>check</th><th>result</th><th>evidence</th></tr></thead><tbody>{chk}</tbody></table></div>
@@ -767,10 +823,11 @@ def main():
             procs.start("protected gateway", ["demo/mock_gateway.py"],
                         {"GATEWAY_NAMESPACE": "protected", "GATEWAY_PORT": "8808"}, 8808)
         procs.start("unprotected gateway", ["demo/mock_gateway.py"],
-                    {"GATEWAY_NAMESPACE": "unprotected", "GATEWAY_PORT": "8809"}, 8809)
+                    {"GATEWAY_NAMESPACE": "unprotected", "GATEWAY_PORT": "8809",
+                     **({"BASELINE_SENSO": "1"} if BASELINE_SENSO else {})}, 8809)
         procs.start("CRM fixture", ["demo/crm_fixture.py"], {}, 8900)
         print("Agent Memory Gateway demo (synthetic data; "
-              f"{'protected=REAL gateway ' + PBASE + '; unprotected=local mock' if REAL else 'mock gateways'}; "
+              f"{'protected=REAL gateway ' + PBASE + '; unprotected=' + ('real Senso baseline' if BASELINE_SENSO else 'local mock') if REAL else 'mock gateways'}; "
               f"AkashML {'STUB' if akash_client.is_stub() else 'LIVE'})")
         R, checks = run_story(procs)
     finally:

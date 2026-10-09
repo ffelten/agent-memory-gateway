@@ -4,6 +4,7 @@ import os
 import re
 import urllib.error
 import urllib.request
+import time
 import uuid
 
 import akash_client
@@ -59,28 +60,61 @@ def beta_cred_baseline(crm_base):
     return {"status": status, "expected": 403, "ok": status == 403}
 
 
-def useful_work(gateway_base, token=None, create_runbook_memory=False):
-    """Publish a source-linked note. With create_runbook_memory (real gateway) the
-    public runbook memory is also written under THIS public-only run, independent
-    of Alpha's handoff, and polled until settled."""
+def _source_topic(src):
+    """Short topic from the registered source itself (its title, else first text line, else URL slug)."""
+    raw = src.get("title") or next((ln for ln in (src.get("text") or "").splitlines() if ln.strip()), "")
+    topic = re.sub(r"\s+", " ", raw.lstrip("# ").strip())[:80].strip()
+    if not topic and src.get("url"):
+        topic = src["url"].rstrip("/").rsplit("/", 1)[-1].replace("-", " ")
+    return topic or "public source"
+
+
+def useful_work(gateway_base, token=None, create_runbook_memory=True):
+    """Publish a source-linked note drafted from RETRIEVED approved public memory.
+
+    Flow: read the public source, write it as a memory (polling until the async
+    gateway settles it), search for it through the gateway, draft the note from the
+    retrieved text only, then publish. create_runbook_memory is kept for caller
+    compatibility; the runbook memory is now always written (retrieval needs it). The memory is written by this public-only run from the registered
+    public source, never from any other tenant's handoff. Titles/query derive from the source.
+    """
     client = GatewayClient(gateway_base, token or beta_pub_token())
     sid = "src-public-runbook"
     src = client.get_source(sid)
-    resp = akash_client.chat([
-        {"role": "system", "content": "Draft a short troubleshooting note using ONLY the public material given."},
-        {"role": "user", "content": f"Public runbook ({src.get('url')}): {src.get('text', '')}"}])
-    runbook = None
-    if create_runbook_memory:
-        cr = client.create_memory("Public runbook: firmware sync troubleshooting",
-                                  f"{resp['content']}\n\nSource: {src.get('url')}",
+    src_url = src.get("url")
+    topic = _source_topic(src)
+    stamp = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())  # Senso rejects duplicate text
+    for attempt in range(3):
+        cr = client.create_memory(f"Public source: {topic}",
+                                  f"{src.get('text', '')}\n\nSource: {src_url}\nAdded to memory: {stamp}",
                                   "runbook-" + uuid.uuid4().hex[:8])
-        state = cr.get("state")
-        if state in GatewayClient.PENDING_STATES and cr.get("memory_id"):
-            state = client.wait_until_settled(cr["memory_id"])
-        runbook = {"memory_id": cr.get("memory_id"), "create_state": cr.get("state"), "settled_state": state}
-    rep = client.create_report("Firmware sync troubleshooting (public runbook)",
-                               f"{resp['content']}\n\nSource: {src.get('url')}", [sid])
-    return {"report_url": rep.get("report_url"), "response": rep, "runbook_memory": runbook, "llm_stub": resp["_stub"]}
+        # Retry only a transient provider outage, never a policy decision.
+        if cr.get("reason_codes") != ["PROVIDER_UNAVAILABLE"]:
+            break
+        time.sleep(5 * (attempt + 1))
+    mem_id = cr.get("memory_id")
+    state = cr.get("state")
+    if state in GatewayClient.PENDING_STATES and mem_id:
+        state = client.wait_until_settled(mem_id)
+    runbook = {"memory_id": mem_id, "create_state": cr.get("state"), "settled_state": state, "reason_codes": cr.get("reason_codes")}
+
+    results = client.search(topic, 5).get("results", []) or []
+    hit = next((r for r in results if mem_id and r.get("memory_id") == mem_id), None)
+    matched = hit is not None
+    if hit is None:
+        hit = next((r for r in results if src_url and src_url in (r.get("text") or "")), None)
+    retrieval = {"memory_id": hit.get("memory_id") if hit else None, "hits": len(results),
+                 "matched": matched, "application_version": hit.get("application_version") if hit else None}
+    retrieved_text = (hit.get("text") or "") if hit else ""
+
+    resp = akash_client.chat([
+        {"role": "system", "content": "Draft a short troubleshooting note using ONLY the retrieved memory text given. "
+                                      "Do not add facts that are not in it."},
+        {"role": "user", "content": f"Retrieved approved public memory:\n{retrieved_text}"}])
+    rep = client.create_report(f"Public note: {topic}",
+                               f"{resp['content']}\n\nSource: {src_url}", [sid])
+    return {"report_url": rep.get("report_url"), "response": rep, "runbook_memory": runbook,
+            "retrieval": retrieval, "llm_stub": resp["_stub"]}
 
 
 if __name__ == "__main__":
