@@ -1,0 +1,306 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Permission-aware agent memory gateway and metadata-only audit delivery.
+
+Parameters:
+  GatewayConfigSecretArn:
+    Type: String
+    Description: Existing Secrets Manager JSON secret with admin_token_sha256, report_base_url, and senso.
+    AllowedPattern: '^arn:[^:]+:secretsmanager:[^:]+:[0-9]{12}:secret:.+$'
+  ClickHouseSecretArn:
+    Type: String
+    Description: Existing Secrets Manager JSON secret with url, username, password, and database.
+    AllowedPattern: '^arn:[^:]+:secretsmanager:[^:]+:[0-9]{12}:secret:.+$'
+  EnableScheduledWorkers:
+    Type: String
+    Description: Enable provider-deletion and analytics retries after sponsor credentials are configured.
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Conditions:
+  WorkersEnabled: !Equals [!Ref EnableScheduledWorkers, 'true']
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+    CodeUri: ../
+    MemorySize: 256
+
+Resources:
+  GatewayTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  GatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+
+  AnalyticsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+
+  GatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: GatewayStateAndProviderConfiguration
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AuthoritativeState
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                Resource: !GetAtt GatewayTable.Arn
+              # DynamoDB transactions authorize their individual Put operations.
+              - Sid: GatewayConfigurationOnly
+                Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref GatewayConfigSecretArn
+              - Sid: GatewayLogsOnly
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt GatewayLogGroup.Arn
+
+  AnalyticsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MetadataOutboxAndClickHouseOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: MetadataPartitionOnly
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                Resource: !GetAtt GatewayTable.Arn
+                Condition:
+                  ForAllValues:StringEquals:
+                    dynamodb:LeadingKeys:
+                      - event
+                  'Null':
+                    dynamodb:LeadingKeys: 'false'
+              - Sid: ClickHouseConfigurationOnly
+                Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref ClickHouseSecretArn
+              - Sid: AnalyticsLogsOnly
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt AnalyticsLogGroup.Arn
+
+  GatewayApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: '$default'
+      # Authentication and the 32 KiB body limit are enforced by the handler.
+      # Do not enable access logs, request tracing, or body/header capture.
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: Agent Memory Gateway
+          version: '1.0'
+        paths: {}
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  GatewayFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: gateway.runtime.lambda_handler
+      Role: !GetAtt GatewayRole.Arn
+      Timeout: 25
+      LoggingConfig:
+        LogGroup: !Ref GatewayLogGroup
+        LogFormat: JSON
+        ApplicationLogLevel: ERROR
+        SystemLogLevel: WARN
+      Environment:
+        Variables:
+          GATEWAY_TABLE: !Ref GatewayTable
+          GATEWAY_CONFIG_SECRET_ARN: !Ref GatewayConfigSecretArn
+          SENSO_ADAPTER_FACTORY: gateway.senso_bridge:create_provider
+      Events:
+        CreateRun:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/admin/runs
+            Method: POST
+            TimeoutInMillis: 29000
+        GetSource:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/sources/{source_id}
+            Method: GET
+            TimeoutInMillis: 29000
+        CreateMemory:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/memories
+            Method: POST
+            TimeoutInMillis: 29000
+        GetMemoryStatus:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/memories/{memory_id}/status
+            Method: GET
+            TimeoutInMillis: 29000
+        SearchMemories:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/memories/search
+            Method: POST
+            TimeoutInMillis: 29000
+        GetMemory:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/memories/{memory_id}
+            Method: GET
+            TimeoutInMillis: 29000
+        RevokeMemory:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/admin/memories/{memory_id}/revoke
+            Method: POST
+            TimeoutInMillis: 29000
+        CreateReport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /v1/reports
+            Method: POST
+            TimeoutInMillis: 29000
+        GetReport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref GatewayApi
+            Path: /reports/{report_id}
+            Method: GET
+            TimeoutInMillis: 29000
+
+  GatewayMaintenanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: gateway.runtime.maintenance_handler
+      Role: !GetAtt GatewayRole.Arn
+      Timeout: 25
+      LoggingConfig:
+        LogGroup: !Ref GatewayLogGroup
+        LogFormat: JSON
+        ApplicationLogLevel: ERROR
+        SystemLogLevel: WARN
+      Environment:
+        Variables:
+          GATEWAY_TABLE: !Ref GatewayTable
+          GATEWAY_CONFIG_SECRET_ARN: !Ref GatewayConfigSecretArn
+          SENSO_ADAPTER_FACTORY: gateway.senso_bridge:create_provider
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 60
+        MaximumRetryAttempts: 0
+      Events:
+        RetryProviderDeletion:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+            State: !If [WorkersEnabled, ENABLED, DISABLED]
+            Input: '{}'
+            RetryPolicy:
+              MaximumEventAgeInSeconds: 60
+              MaximumRetryAttempts: 1
+
+  AnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: analytics.worker.lambda_handler
+      Role: !GetAtt AnalyticsRole.Arn
+      Timeout: 60
+      LoggingConfig:
+        LogGroup: !Ref AnalyticsLogGroup
+        LogFormat: JSON
+        ApplicationLogLevel: ERROR
+        SystemLogLevel: WARN
+      Environment:
+        Variables:
+          GATEWAY_TABLE: !Ref GatewayTable
+          CLICKHOUSE_SECRET_ARN: !Ref ClickHouseSecretArn
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 60
+        MaximumRetryAttempts: 0
+      Events:
+        RetryMetadata:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+            State: !If [WorkersEnabled, ENABLED, DISABLED]
+            Input: '{}'
+            RetryPolicy:
+              MaximumEventAgeInSeconds: 60
+              MaximumRetryAttempts: 1
+
+Outputs:
+  GatewayBaseUrl:
+    Description: Set GATEWAY_BASE_URL for clients and report_base_url in the gateway config secret.
+    Value: !Sub 'https://${GatewayApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}'
+  GatewayTableName:
+    Description: Authoritative state table for the trusted bootstrap operator only.
+    Value: !Ref GatewayTable
+  GatewayFunctionName:
+    Value: !Ref GatewayFunction
+  GatewayMaintenanceFunctionName:
+    Value: !Ref GatewayMaintenanceFunction
+  AnalyticsFunctionName:
+    Value: !Ref AnalyticsFunction
