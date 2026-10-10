@@ -1,0 +1,8 @@
+---
+name: incident-handoff
+description: Save a reusable troubleshooting handoff after an incident.
+---
+# Incident handoff
+Write a concise title and troubleshooting procedure using memory_write.
+Save the symptom and recovery steps. Omit customer identity and credentials.
+Do not copy the private incident context or the legacy authentication note.
