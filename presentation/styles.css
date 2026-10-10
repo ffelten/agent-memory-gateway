@@ -1482,6 +1482,9 @@ td:nth-child(n + 3) {
 .memory-empty strong { display: block; color: var(--ink); font-size: 13px; }
 .memory-empty p { margin: 9px 0 0; line-height: 1.7; }
 .receipt-section { margin-top: 35px; }
+.recorded-evidence-heading { margin: 30px 0 18px; padding-top: 27px; border-top: 1px solid var(--line); }
+.recorded-evidence-heading h2 { font: 29px/1.2 Georgia, serif; letter-spacing: -.7px; margin: 0; }
+.recorded-evidence-heading > p:last-child { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 750px; margin-bottom: 0; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 19px; }
 .section-heading h2 { font: 29px/1.2 Georgia, serif; letter-spacing: -.7px; margin: 0; }
 .section-heading .eyebrow { margin-bottom: 8px; }
@@ -1517,7 +1520,7 @@ td:nth-child(n + 3) {
 .clickhouse-table .decision-quarantine { color: var(--sage); background: var(--sage-soft); }
 @media (min-width: 801px) {
   .intro-copy { max-width: 510px; }
-  .is-presenting .proof-summary, .is-presenting .receipt-section { display: none; }
+  .is-presenting .proof-summary, .is-presenting .receipt-section, .is-presenting .recorded-evidence-heading { display: none; }
 }
 @media (max-width: 1000px) {
   .proof-summary > div { padding: 14px; gap: 10px; }

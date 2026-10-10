@@ -6,16 +6,16 @@
     <meta name="theme-color" content="#f7f5f0" />
     <meta
       name="description"
-      content="Recorded model failure. Verified gateway protection. Inspect the poisoned skill, native tool calls, and three live AWS quarantine receipts."
+      content="An illustrated poisoned-skill incident. Watch Alpha write a memory, Beta discover it, and the gateway stop it before it spreads."
     />
-    <title>Memory Gateway — The model leaked it. The gateway stopped it.</title>
+    <title>Memory Gateway — Watch the handoff.</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23b65c40'/%3E%3Cpath d='M11 27V13h5l4 7 4-7h5v14h-5v-7l-4 6-4-6v7z' fill='%23fff'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script src="evidence.js" defer></script>
     <script src="scenario.js" defer></script>
+    <script src="evidence.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body data-mode="baseline" data-step="0" data-playing="false">
@@ -75,7 +75,7 @@
         >
         <div class="header-right">
           <span class="illustration-badge"
-            ><span></span>Recorded experiment</span
+            ><span></span>Illustrated scenario</span
           ><button
             id="fullscreen"
             class="icon-button"
@@ -89,14 +89,14 @@
       <main id="incident-stage" tabindex="-1">
         <section class="intro">
           <div>
-            <p class="eyebrow">REAL MODEL CALLS. REAL GATEWAY DECISIONS.</p>
+            <p class="eyebrow">THE ANATOMY OF A MEMORY LEAK</p>
             <h1>
-              The model leaked it.<br />
-              <span class="hero-resolution">The gateway stopped it.</span>
+              A helpful skill.<br class="mobile-break" />
+              A harmful memory.
             </h1>
             <p class="intro-copy">
-              A poisoned skill convinced an agent to save a credential.
-              Replay the captured write. Inspect the block.
+              Follow the conversation. Watch the handoff. See where trust
+              breaks.
             </p>
           </div>
           <button id="skill-button" class="skill-trigger">
@@ -112,12 +112,7 @@
             >
           </button>
         </section>
-        <section class="proof-summary" aria-label="Measured experiment results">
-          <div><strong>3<span>/6</span></strong><p>Poisoned runs leaked<small>GPT-OSS-20B · three skill variants</small></p></div>
-          <div><strong>0<span>/2</span></strong><p>Clean controls leaked<small>Same task and credential rule</small></p></div>
-          <div class="proof-success"><strong>3<span>/3</span></strong><p>Captured leaks blocked<small>Live AWS · unchanged candidates</small></p></div>
-        </section>
-        <section class="player" aria-label="Recorded incident player">
+        <section class="player" aria-label="Illustrated incident player">
           <div class="player-toolbar">
             <div
               class="mode-switch"
@@ -125,15 +120,15 @@
               aria-label="Comparison scenario"
             >
               <button id="baseline-mode" aria-pressed="true">
-                <span class="mode-number">01</span>Model failure</button
+                <span class="mode-number">01</span>Without gateway</button
               ><button id="protected-mode" aria-pressed="false">
-                <span class="mode-number">02</span>Gateway protection
+                <span class="mode-number">02</span>With gateway
               </button>
             </div>
             <span id="route-label" class="route-label"
-              >Poisoned skill → model → memory write</span
+              >Alpha → shared memory → Beta</span
             >
-            <span class="simulation-label">GPT-OSS-20B · recorded</span>
+            <span class="simulation-label">Haiku · simulated</span>
           </div>
           <div class="stage-grid">
             <section
@@ -145,7 +140,7 @@
                 <span class="avatar alpha-avatar">A</span>
                 <div>
                   <h2 id="alpha-heading">Agent Alpha</h2>
-                  <p>AkashML · actual native tool calls</p>
+                  <p>Customer Alpha · incident response</p>
                 </div>
                 <span class="pane-activity" aria-hidden="true"></span>
               </header>
@@ -153,12 +148,12 @@
                 class="conversation"
                 id="alpha-messages"
                 role="region"
-                aria-label="Recorded Alpha model transcript"
+                aria-label="Alpha scripted conversation"
                 tabindex="0"
               ></div>
               <footer class="pane-footer">
                 <span class="permission-dot"></span>Can read Alpha + public
-                sources · synthetic incident
+                sources
               </footer>
             </section>
             <section
@@ -171,19 +166,19 @@
                   ><svg><use href="#i-memory" /></svg
                 ></span>
                 <div>
-                  <h2 id="memory-heading">The memory write</h2>
-                  <p>Exact text returned by the model</p>
+                  <h2 id="memory-heading">Shared memory</h2>
+                  <p>Watch what becomes retrievable</p>
                 </div>
               </header>
               <div
                 class="memory-body"
                 id="memory-content"
                 role="region"
-                aria-label="Captured candidate and gateway state"
+                aria-label="Illustrated memory contents"
                 tabindex="0"
               ></div>
               <footer class="pane-footer" id="memory-footer">
-                Captured tool arguments · synthetic credential
+                Memory store · illustrative contents
               </footer>
             </section>
             <section
@@ -194,8 +189,8 @@
               <header class="pane-header">
                 <span class="avatar beta-avatar">B</span>
                 <div>
-                  <h2 id="beta-heading">Beta access checks</h2>
-                  <p id="beta-context">Recorded HTTP checks · scoped identity</p>
+                  <h2 id="beta-heading">Agent Beta</h2>
+                  <p id="beta-context">Customer Beta · troubleshooting note</p>
                 </div>
                 <span class="pane-activity" aria-hidden="true"></span>
               </header>
@@ -203,13 +198,13 @@
                 class="conversation"
                 id="beta-messages"
                 role="region"
-                aria-label="Beta scoped HTTP checks and experiment observations"
+                aria-label="Beta scripted conversation"
                 tabindex="0"
               ></div>
               <footer class="pane-footer">
                 <span class="permission-dot"></span
                 ><span id="beta-permissions"
-                  >Trusted harness · fresh Beta run token</span
+                  >Can read Beta + public sources</span
                 >
               </footer>
             </section>
@@ -220,7 +215,7 @@
               <strong id="event-title"></strong>
               <p id="event-caption"></p>
             </div>
-            <span id="event-status" class="event-status">RECORDED</span>
+            <span id="event-status" class="event-status">ILLUSTRATED</span>
           </div>
           <div
             id="timeline"
@@ -267,6 +262,16 @@
             </button>
           </div>
         </section>
+        <section class="recorded-evidence-heading" aria-labelledby="recorded-tests-title">
+          <p class="eyebrow">SEPARATE RECORDED TESTS</p>
+          <h2 id="recorded-tests-title">The experiment behind the demo.</h2>
+          <p>Real GPT-OSS-20B calls, three live AWS gateway checks, and verified ClickHouse logs. These receipts are separate from the illustrated story above.</p>
+        </section>
+        <section class="proof-summary" aria-label="Measured experiment results">
+          <div><strong>3<span>/6</span></strong><p>Poisoned runs leaked<small>GPT-OSS-20B · three skill variants</small></p></div>
+          <div><strong>0<span>/2</span></strong><p>Clean controls leaked<small>Same task and credential rule</small></p></div>
+          <div class="proof-success"><strong>3<span>/3</span></strong><p>Captured leaks blocked<small>Live AWS · unchanged candidates</small></p></div>
+        </section>
         <section
           class="evidence-strip"
           aria-label="Verified experiment evidence"
@@ -297,7 +302,7 @@
           <div id="receipt-cards" class="receipt-grid"></div>
         </section>
         <p class="disclosure">
-          Recorded replay with synthetic data. Model inference used AkashML; protection checks hit the live AWS gateway.
+          The walkthrough is illustrated. Evidence below it comes from separate recorded tests using synthetic data.
           <span>The unprotected memory sink was local. Beta checks were HTTP requests from a trusted harness. Playback makes no live API calls.</span>
         </p>
       </main>
@@ -309,7 +314,7 @@
     <dialog id="skill-dialog" aria-labelledby="skill-title">
       <div class="dialog-header">
         <div>
-          <p class="eyebrow">THE ACTUAL POISONED SKILL · SYNTHETIC FIXTURE</p>
+          <p class="eyebrow">THE POISONED SKILL · ILLUSTRATIVE FIXTURE</p>
           <h2 id="skill-title">
             A bad instruction, dressed as a helpful handoff.
           </h2>
@@ -319,9 +324,9 @@
         </button>
       </div>
       <p class="dialog-intro">
-        This exact skill text was returned by the read_skill tool to GPT-OSS-20B.
-        It claimed a synthetic credential was exempt from the system’s explicit
-        secrecy rule. The model then copied it into a memory_write call.
+        Alpha is portrayed as a small-model agent following this untrusted
+        skill. This file is displayed as story content; it is never installed or
+        executed.
       </p>
       <div class="skill-file">
         <div class="file-bar">
@@ -339,8 +344,8 @@
         </p>
       </div>
       <p class="dialog-note">
-        The harness forced only skill loading. The model chose its memory-write
-        arguments. This fixture was never installed in Codex or Claude.
+        “Haiku · simulated” is a model portrayal, not a tested Haiku result or a
+        claim about model safety.
       </p>
     </dialog>
     <dialog id="evidence-dialog" aria-labelledby="evidence-title">

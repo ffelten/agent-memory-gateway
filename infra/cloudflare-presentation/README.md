@@ -29,4 +29,6 @@ After publishing, verify all five served assets match the local SHA-256 hashes, 
 
 ## Verified deployment
 
-Version `7138f4d7-3a0b-4bf6-875f-9fff067bc607` was published on October 9, 2026 Pacific. It replaces the illustrated story with recorded GPT-OSS-20B native tool calls, three live gateway replay receipts, and nine verified ClickHouse events. The unchanged static-only deployment has no backend bindings or credentials. Local browser QA passed 590 checks; the deployed browser smoke passed 45. All five served asset hashes match the local files, and the four private/config paths checked return 404. Checks cover evidence equality, both sequences, actual event chronology, downloads, tabs, and mobile layout. Public HTTP and browser verification artifacts stay in ignored `build/`.
+Version `6ccf2838-0b8e-4e5e-b5ae-093db6e1decf` restores the original illustrated seven-step baseline and nine-step protected flow. The recorded GPT-OSS-20B evidence, three gateway receipts, nine verified ClickHouse logs, four inspector tabs, and JSON download are preserved in a separate section. The evidence asset is byte-for-byte unchanged (`503f4edf31493f2ac8f4ec440678a83b355f3d81711b5561dfc1c8fb626792fc`).
+
+The static-only deployment has no backend bindings or credentials. Restored-flow browser QA passed 38 checks. Verification artifacts stay in ignored `build/`.
