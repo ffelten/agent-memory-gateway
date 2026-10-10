@@ -12,7 +12,7 @@ From the repository root:
 .venv/bin/python infra/cloudflare-presentation/prepare.py
 cd build/cloudflare-presentation
 cf deploy --prebuilt --dry-run
-cf deploy --prebuilt --message 'Publish illustrated memory gateway incident player'
+cf deploy --prebuilt --message 'Publish recorded model failures and verified gateway evidence'
 ```
 
 Use the existing Cloudflare CLI login or an API token with the required Workers permissions. `CLOUDFLARE_API_TOKEN` takes precedence over the saved browser login. If an existing token lacks deployment permission, complete `cf auth login` and run deployment with that environment variable omitted for the command:
@@ -25,8 +25,8 @@ Set `CLOUDFLARE_ACCOUNT_ID` explicitly when more than one account is available. 
 
 The Worker is named `memory-gateway-demo`. `workers.dev` access is enabled, version preview URLs are disabled, and unknown paths return 404 rather than the application page. The CLI deployment output supplies the public HTTPS URL.
 
-After publishing, verify all five served assets match the local SHA-256 hashes, then exercise the baseline, protected reset, poisoned-skill inspector, and recorded-evidence dialog in a browser. Check that `/.env`, `/README.md`, and `/asset-manifest.json` return 404.
+After publishing, verify all five served assets match the local SHA-256 hashes, then exercise the model and protected sequences, reset, poisoned-skill inspector, all four evidence tabs, receipt selector, and evidence download in a browser. Check that `/.env`, `/README.md`, and `/asset-manifest.json` return 404.
 
 ## Verified deployment
 
-Version `878e6cc6-3a06-44cb-b414-289f290c163c` was published on October 9, 2026. All five HTTPS assets matched the local SHA-256 hashes; `/.env`, `/README.md`, `/asset-manifest.json`, and `/.gateway-admin.json` return 404. A deployed browser smoke passed 22 checks, including both scenario modes, reset, dialogs, and mobile layout. Verification artifacts stay in ignored `build/`.
+Version `7138f4d7-3a0b-4bf6-875f-9fff067bc607` was published on October 9, 2026 Pacific. It replaces the illustrated story with recorded GPT-OSS-20B native tool calls, three live gateway replay receipts, and nine verified ClickHouse events. The unchanged static-only deployment has no backend bindings or credentials. Local browser QA passed 590 checks; the deployed browser smoke passed 45. All five served asset hashes match the local files, and the four private/config paths checked return 404. Checks cover evidence equality, both sequences, actual event chronology, downloads, tabs, and mobile layout. Public HTTP and browser verification artifacts stay in ignored `build/`.
