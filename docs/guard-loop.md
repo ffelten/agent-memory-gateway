@@ -21,7 +21,7 @@ flowchart LR
 
 ![Leaks stopped at the door per round](img/guard-loop-block-rate.svg)
 
-**Live run** (2026-10-11, real AkashML `gpt-oss-120b` + real Senso, 5 rounds): by round 5 the door blocked **10 of 16** leak attempts, against 2 for the built-in scanner alone. The auditor found **34 leaks** stored in Senso, with no false flags, and **no benign note was blocked** (0 of 20). The gate verified 10 rules and rejected most proposals, mainly because they missed the leak or its mutations. Better proposals are the next lever.
+**Live run** (2026-10-11, real AkashML `gpt-oss-120b` + real Senso, 5 rounds): by round 5 the door blocked **13 of 16** leak attempts, against 2 for the built-in scanner alone. The auditor found **14 leaks** stored in Senso, missed 4, and raised no false flags. **No benign note was blocked** (0 of 20). The gate verified 12 of 18 proposed rules.
 
 ## How it works
 
@@ -52,8 +52,24 @@ flowchart LR
 | Auditor and proposer | Real AkashML (`openai/gpt-oss-120b`) |
 | Door | The gateway's own scanner code (`gateway/scanner.py` + learned rules), run by the harness |
 | Enforcement in the gateway policy service | Tested: `tests/test_guard_loop.py` loads the rules into the real `Gateway` service; a GitHub-token leak is then `QUARANTINED` before any provider call |
-| Enforcement in the deployed AWS gateway | Not yet: needs the small loader change in [this handoff](handoffs/guard-loop-scanner-hook.md) |
+| Enforcement in the deployed AWS gateway | Not yet: see below |
 | Traffic | Synthetic leak attempts across 8 credential shapes, plus benign notes. No real credentials |
+
+## Enforcing in the deployed gateway
+
+The gateway already accepts a `scanner=` callable. Loading the rules takes a few lines at Lambda
+cold start, with the rule-set head pinned in trusted config:
+
+```python
+from guardloop.gate import RuleSet
+from gateway.scanner import has_secret
+
+rules = RuleSet.load(json.load(open(RULES_PATH)), os.environ["GUARD_RULES_HEAD"])
+gateway = Gateway(store, provider, ..., scanner=rules.scanner(has_secret))
+```
+
+`RuleSet.load` raises if the file was edited, reordered or truncated. In that case the gateway
+should fail closed, not silently fall back.
 
 ## Run it
 

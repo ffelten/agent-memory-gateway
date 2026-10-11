@@ -65,11 +65,11 @@ flowchart LR
 <img src="docs/img/guard-loop-block-rate.svg" alt="Leaks stopped at the door per round, with learned rules versus the built-in scanner only" width="720">
 </p>
 
-**Live run** (2026-10-11, real AkashML `gpt-oss-120b` + real Senso, 5 rounds): by round 5 the door blocked **10 of 16** leak attempts, against 2 for the built-in scanner alone. The auditor found **34 leaks** stored in Senso, with no false flags, and **no benign note was blocked** (0 of 20). The gate verified 10 rules and rejected most proposals, mainly because they missed the leak or its mutations. Better proposals are the next lever.
+**Live run** (2026-10-11, real AkashML `gpt-oss-120b` + real Senso, 5 rounds): by round 5 the door blocked **13 of 16** leak attempts, against 2 for the built-in scanner alone. The auditor found **14 leaks** stored in Senso, missed 4, and raised no false flags. **No benign note was blocked** (0 of 20). The gate verified 12 of 18 proposed rules.
 
 The rules are enforced in the real gateway policy code under test (`tests/test_guard_loop.py`).
-Loading them in the deployed AWS gateway needs a small change, proposed in
-[this handoff](docs/handoffs/guard-loop-scanner-hook.md). Details: [docs/guard-loop.md](docs/guard-loop.md).
+Loading them in the deployed AWS gateway is a small, not-yet-made change described in
+[docs/guard-loop.md](docs/guard-loop.md#enforcing-in-the-deployed-gateway).
 
 ## Evidence
 
@@ -90,9 +90,17 @@ uv pip install --python .venv/bin/python -r requirements-dev.txt
 python3 tests/test_gateway_contract.py                     # mock contract suite
 ```
 
-The full live demo and sponsor setup are covered in [Florian's handoff](docs/handoffs/florian.md)
-and [Ash's handoff](docs/handoffs/ash.md). Keep `.env`, `.gateway-admin.json` and `build/` out of
-source control.
+Full live demo against the deployed gateway (real AkashML agents, about 40 s; needs `.env` and
+`.gateway-admin.json`):
+
+```sh
+set -a; . ./.env; set +a
+GATEWAY_BASE_URL=https://yrx2yjzb7h.execute-api.us-east-1.amazonaws.com uv run python3 demo/run_demo.py
+open demo/output/index.html
+```
+
+AWS deployment: [infra/README.md](infra/README.md). Keep `.env`, `.gateway-admin.json` and `build/`
+out of source control.
 
 ## Honest limits
 
