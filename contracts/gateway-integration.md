@@ -1,7 +1,7 @@
 # Gateway integration contract — v1
 
 Existing HTTP routes and fixture IDs in the specification remain unchanged.
-This file records the implementation boundary. Deployment and verification evidence is summarized in `docs/handoffs/ash.md`.
+This file records the implementation boundary.
 
 ## Ownership and runtime
 

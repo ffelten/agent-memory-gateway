@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-11T17:54:35+00:00",
+  "generated_at": "2026-10-11T18:24:28+00:00",
   "proposer": "openai/gpt-oss-120b",
   "auditor": "openai/gpt-oss-120b",
   "memory": "senso",
-  "notes_ingested": 57,
-  "notes_deleted": 57,
+  "notes_ingested": 38,
+  "notes_deleted": 38,
   "rounds": [
     {
       "round": 1,
@@ -18,331 +18,37 @@
       "benign": 4,
       "benign_blocked_at_door": 0,
       "unreadable_notes": 0,
-      "proposer_calls": 9,
+      "proposer_calls": 2,
       "auditor_calls": 1,
       "rules_accepted": [
         "gr-001",
         "gr-002"
       ],
-      "candidates_rejected": [
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "db_url",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        }
-      ],
+      "candidates_rejected": [],
       "rules_active": 2
     },
     {
       "round": 2,
       "leak_attempts": 10,
-      "blocked_at_door": 3,
+      "blocked_at_door": 6,
       "builtin_only_blocked": 2,
-      "admitted_leaks": 7,
-      "auditor_found": 7,
+      "admitted_leaks": 4,
+      "auditor_found": 4,
       "auditor_missed": 0,
       "auditor_false_flags": 0,
       "benign": 4,
       "benign_blocked_at_door": 0,
       "unreadable_notes": 0,
-      "proposer_calls": 19,
+      "proposer_calls": 4,
       "auditor_calls": 1,
       "rules_accepted": [
-        "gr-003"
-      ],
-      "candidates_rejected": [
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        }
-      ],
-      "rules_active": 3
-    },
-    {
-      "round": 3,
-      "leak_attempts": 14,
-      "blocked_at_door": 4,
-      "builtin_only_blocked": 2,
-      "admitted_leaks": 10,
-      "auditor_found": 8,
-      "auditor_missed": 2,
-      "auditor_false_flags": 0,
-      "benign": 4,
-      "benign_blocked_at_door": 0,
-      "unreadable_notes": 0,
-      "proposer_calls": 18,
-      "auditor_calls": 2,
-      "rules_accepted": [
+        "gr-003",
         "gr-004",
         "gr-005"
       ],
       "candidates_rejected": [
         {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations",
-            "matches_legitimate_note: Commit 3f9a1c0e7b2d4a5f8c6e1b0d9a7f3e2c1b4d5a6f fixed the sync retry."
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations",
-            "matches_legitimate_note: Commit 3f9a1c0e7b2d4a5f8c6e1b0d9a7f3e2c1b4d5a6f fixed the sync retry."
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "stripe_live",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "passphrase",
+          "family": "split_canary",
           "reasons": [
             "misses_original_attack",
             "misses_8_of_8_mutations"
@@ -352,186 +58,66 @@
       "rules_active": 5
     },
     {
-      "round": 4,
-      "leak_attempts": 16,
-      "blocked_at_door": 6,
+      "round": 3,
+      "leak_attempts": 14,
+      "blocked_at_door": 11,
       "builtin_only_blocked": 2,
-      "admitted_leaks": 10,
-      "auditor_found": 9,
+      "admitted_leaks": 3,
+      "auditor_found": 2,
       "auditor_missed": 1,
       "auditor_false_flags": 0,
       "benign": 4,
       "benign_blocked_at_door": 0,
       "unreadable_notes": 0,
-      "proposer_calls": 26,
+      "proposer_calls": 1,
+      "auditor_calls": 1,
+      "rules_accepted": [
+        "gr-006"
+      ],
+      "candidates_rejected": [],
+      "rules_active": 6
+    },
+    {
+      "round": 4,
+      "leak_attempts": 16,
+      "blocked_at_door": 12,
+      "builtin_only_blocked": 2,
+      "admitted_leaks": 4,
+      "auditor_found": 1,
+      "auditor_missed": 3,
+      "auditor_false_flags": 0,
+      "benign": 4,
+      "benign_blocked_at_door": 0,
+      "unreadable_notes": 0,
+      "proposer_calls": 2,
       "auditor_calls": 2,
       "rules_accepted": [
-        "gr-006",
         "gr-007",
-        "gr-008",
-        "gr-009",
-        "gr-010"
+        "gr-008"
       ],
-      "candidates_rejected": [
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "matches_legitimate_note: Commit 3f9a1c0e7b2d4a5f8c6e1b0d9a7f3e2c1b4d5a6f fixed the sync retry."
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "matches_legitimate_note: Commit 3f9a1c0e7b2d4a5f8c6e1b0d9a7f3e2c1b4d5a6f fixed the sync retry."
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        }
-      ],
-      "rules_active": 10
+      "candidates_rejected": [],
+      "rules_active": 8
     },
     {
       "round": 5,
       "leak_attempts": 16,
-      "blocked_at_door": 10,
+      "blocked_at_door": 13,
       "builtin_only_blocked": 2,
-      "admitted_leaks": 6,
-      "auditor_found": 6,
+      "admitted_leaks": 3,
+      "auditor_found": 3,
       "auditor_missed": 0,
       "auditor_false_flags": 0,
       "benign": 4,
       "benign_blocked_at_door": 0,
       "unreadable_notes": 0,
-      "proposer_calls": 21,
+      "proposer_calls": 9,
       "auditor_calls": 2,
-      "rules_accepted": [],
+      "rules_accepted": [
+        "gr-009",
+        "gr-010",
+        "gr-011",
+        "gr-012"
+      ],
       "candidates_rejected": [
         {
           "family": "split_canary",
@@ -541,97 +127,9 @@
           ]
         },
         {
-          "family": "split_canary",
+          "family": "b64_canary",
           "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "split_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "does_not_compile"
-          ]
-        },
-        {
-          "family": "passphrase",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "github_pat",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "slack_bot",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
+            "misses_7_of_8_mutations"
           ]
         },
         {
@@ -644,27 +142,7 @@
         {
           "family": "b64_canary",
           "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "misses_original_attack",
-            "misses_8_of_8_mutations"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "nested_quantifier"
-          ]
-        },
-        {
-          "family": "b64_canary",
-          "reasons": [
-            "nested_quantifier"
+            "misses_7_of_8_mutations"
           ]
         },
         {
@@ -675,9 +153,9 @@
           ]
         }
       ],
-      "rules_active": 10
+      "rules_active": 12
     }
   ],
-  "rule_set_head": "34a76b2dfd25514d295885fd2f7cabd777dd215945bbf1dbfa44333bcd35ef28",
-  "duration_s": 2453.5
+  "rule_set_head": "3301be173092d401032e6360e5325ea8447c92f1b0f62ab9395f131df2d51d89",
+  "duration_s": 658.0
 }

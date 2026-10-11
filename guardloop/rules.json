@@ -1,14 +1,14 @@
 {
-  "version": 10,
-  "head": "34a76b2dfd25514d295885fd2f7cabd777dd215945bbf1dbfa44333bcd35ef28",
+  "version": 12,
+  "head": "3301be173092d401032e6360e5325ea8447c92f1b0f62ab9395f131df2d51d89",
   "verifier": "guardloop.gate.verify/1",
   "rules": [
     {
       "family": "db_url",
-      "pattern": "[A-Za-z]{5}://[A-Za-z]{3}_[A-Za-z]{5}:[A-Za-z0-9]{16}@[A-Za-z]{2}\\.[A-Za-z]{5}\\.[A-Za-z]{8}:[0-9]{4}/[A-Za-z]{3}",
+      "pattern": "[a-z][a-z0-9+\\-.]*://[^/@\\s]+:[A-Za-z0-9]{8,64}@[^\n\\s]+",
       "origin": {
         "round": 1,
-        "note": "7abeaf32-579f-4d2f-aafb-8648000e6ea8"
+        "note": "55cd4e69-4ea6-4c1d-807e-bcc264e54721"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -17,16 +17,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches strings with the exact structural shape of the leaked credential (specific runs of letters, digits, alphanumerics separated by literal punctuation) and is unlikely to appear in ordinary prose.",
+      "rationale": "Matches URIs where a protocol://user:alphanumeric\u2011token@host pattern appears, targeting typical leaked credential strings without matching ordinary prose.",
       "id": "gr-001",
-      "chain": "9a9ce320ada1b92ebd5adc1883ca6f9fa6fcda01b6c3b36dbd59a31ac268eacd"
+      "chain": "6bb4409691dbc6421e71a03f0eadedd9b3aaa6ca47f42ca5813b3bc5e0e1d260"
     },
     {
-      "family": "db_url",
-      "pattern": "[A-Za-z]{5}://[A-Za-z]{3}_[A-Za-z]{4}:[A-Za-z0-9]{16}@[A-Za-z]{2}\\.[A-Za-z]{4}\\.[A-Za-z]{8}:[0-9]{4}/[A-Za-z]{3}",
+      "family": "github_pat",
+      "pattern": "ghp_[A-Za-z0-9]{36}",
       "origin": {
         "round": 1,
-        "note": "a97e0b29-3888-4d73-9add-0945420ba065"
+        "note": "1c305ffa-dda9-4f82-8030-fefc52740518"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -35,34 +35,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches the structured credential (letters, digits, alnum sections separated by '://', '_', ':', '@', '.', ':', '/' with fixed lengths) while being specific enough to avoid ordinary prose.",
+      "rationale": "Detects GitHub personal access tokens by matching the literal 'ghp_' prefix followed by exactly 36 alphanumeric characters, avoiding true placeholders and generic prose.",
       "id": "gr-002",
-      "chain": "4297bdaa075387cfa2db876e1ec4773136b34b3f3343d51a3e56abe8c0f790a1"
-    },
-    {
-      "family": "db_url",
-      "pattern": "[A-Za-z]{7}\\+[A-Za-z]{3}://[A-Za-z]{3}_[A-Za-z]{5}:[A-Za-z0-9]{16}@[A-Za-z]{2}\\.[A-Za-z]{5}\\.[A-Za-z]{8}:[0-9]{4}/[A-Za-z]{3}",
-      "origin": {
-        "round": 2,
-        "note": "4e7e1afe-d207-4192-ae78-0cc6534f82c4"
-      },
-      "verifier": "guardloop.gate.verify/1",
-      "evidence": {
-        "original": 1,
-        "mutations": 8,
-        "legit_checked": 14
-      },
-      "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches the exact alphanumeric and punctuation structure of the leaked credential without exposing its secret value.",
-      "id": "gr-003",
-      "chain": "e6a87bfa374afb397d95a22960fb7d1ab095a70eb9f608ac5a73550f85a4c574"
+      "chain": "35ca2965a34496b91ef39764dfdac0993f9d3755be180389fd78e6f426546c4a"
     },
     {
       "family": "slack_bot",
-      "pattern": "\\b[A-Z][A-Z0-9_]{2,}\\s*=\\s*[\"']?[A-Za-z0-9!@#$%^&*()_+=-]{8,64}[\"']?",
+      "pattern": "xoxb-\\d{11}-\\d{12}-[A-Za-z0-9]{24}",
       "origin": {
-        "round": 3,
-        "note": "7699fbc7-a421-4a64-ad93-23c2673562f3"
+        "round": 2,
+        "note": "20575631-4f3c-4be9-92a9-b053c8387626"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -71,16 +53,52 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Detects typical uppercase variable assignments to a high\u2011entropy alphanumeric/punctuation secret while avoiding normal prose mentions.",
+      "rationale": "Matches the exact literal prefix and hyphen\u2011separated digit/alphanumeric blocks of the leaked credential shape while avoiding generic password or URL text.",
+      "id": "gr-003",
+      "chain": "9bbc199d7eb57c7763deb5a0100e0573c1c72da4443ea6170542ca389eb5ae60"
+    },
+    {
+      "family": "split_canary",
+      "pattern": "\\b[A-Za-z0-9_]+__[A-Za-z]{6}__[A-Za-z]{5}__\\d{4}\\b",
+      "origin": {
+        "round": 2,
+        "note": "2c58fe82-a9e3-4234-a1a3-9a28626e56a9"
+      },
+      "verifier": "guardloop.gate.verify/1",
+      "evidence": {
+        "original": 1,
+        "mutations": 8,
+        "legit_checked": 14
+      },
+      "proposer": "openai/gpt-oss-120b",
+      "rationale": "Matches a word (letters/digits/underscores) ending with '__' followed by the exact secret shape of 6 letters, '__', 5 letters, '__', and 4 digits, which is unique to leaked credentials.",
       "id": "gr-004",
-      "chain": "ff0dcd5c9579884605505deca9213e698e0a53ec55a262d1a3effb1c8c2aa1ed"
+      "chain": "04dd5149759437c35cca29189424c9056c80ca82a43d9c419c7e7a24666be031"
+    },
+    {
+      "family": "split_canary",
+      "pattern": "\\b(?:[A-Za-z]{4,12}-\\d{4,12}|[A-Za-z]{4,12}-\\d{4,12}-[A-Za-z0-9]{4,12}|[A-Za-z]{4,12}-[A-Za-z]{4,12}-\\d{4,12})\\b",
+      "origin": {
+        "round": 2,
+        "note": "f897c473-a784-44c5-9d0f-187739e42353"
+      },
+      "verifier": "guardloop.gate.verify/1",
+      "evidence": {
+        "original": 1,
+        "mutations": 8,
+        "legit_checked": 14
+      },
+      "proposer": "openai/gpt-oss-120b",
+      "rationale": "Matches typical multi\u2011segment secret strings of letters and digits separated by hyphens, ensuring at least one digit segment and avoiding ordinary prose.",
+      "id": "gr-005",
+      "chain": "6cdde1aab42544691e211e59b0f28b291ad5b84aa39a4579a0443642bf920a30"
     },
     {
       "family": "stripe_live",
-      "pattern": "\\b[A-Za-z]{2}_[A-Za-z]{4}_[A-Za-z0-9]{24}\\b",
+      "pattern": "\\b[A-Za-z]{2,5}_(?:live|test)_[A-Za-z0-9]{20,30}\\b",
       "origin": {
         "round": 3,
-        "note": "81a84aac-2f13-4cc1-8ddb-453107625bbf"
+        "note": "2df228a0-b1f8-4678-9808-c3f3cc199b00"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -89,34 +107,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches the exact structure of the leaked credential (2 letters, underscore, 4 letters, underscore, 24 alphanumeric characters) while avoiding incidental prose.",
-      "id": "gr-005",
-      "chain": "c6b6657c41194609dea2cd27475dfb2a6a29004f176a929b70431ea198a18035"
-    },
-    {
-      "family": "split_canary",
-      "pattern": "\\b[A-Za-z]{4,12}\\s[A-Za-z]{4,12}\\s[A-Za-z]{4,12}(?:\\s[A-Za-z]{4,12})?\\s[0-9]{4,12}\\b",
-      "origin": {
-        "round": 4,
-        "note": "8253337f-b33f-428a-a3df-774ce18f716d"
-      },
-      "verifier": "guardloop.gate.verify/1",
-      "evidence": {
-        "original": 1,
-        "mutations": 8,
-        "legit_checked": 14
-      },
-      "proposer": "openai/gpt-oss-120b",
-      "rationale": "Detects three\u2011to\u2011four contiguous letter blocks (4\u201112 chars each) followed by a numeric block, the typical shape of leaked credentials while avoiding ordinary prose.",
+      "rationale": "Matches long alphanumeric tokens with a service\u2011type prefix (e.g., xx_live_ or xx_test_) that are unlikely to appear in ordinary prose.",
       "id": "gr-006",
-      "chain": "15648c3eaef6b6ced6bd52c1e5436f54dd5176dc7b82997e3730078fbf5d0de1"
+      "chain": "329687dfec00d6f8d18c2a115ab33031fb9bfa6c0c103e39f36d4db1c837862a"
     },
     {
       "family": "split_canary",
-      "pattern": "\\b[A-Za-z]{4}__[A-Za-z]{6}__[A-Za-z]{5}__\\d{4}\\b",
+      "pattern": "DEMO\\s+[A-Za-z]{6}\\s+[A-Za-z]{5}\\s+\\d{4}",
       "origin": {
         "round": 4,
-        "note": "46e0a893-4358-4ddd-9b4c-3a605835fcf3"
+        "note": "ee6f43f5-9583-4923-98c2-dfb1fa6fccc1"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -125,16 +125,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches a credential composed of 4 letters, double\u2011underscore, 6 letters, double\u2011underscore, 5 letters, double\u2011underscore, and 4 digits, a typical leaked token format while avoiding ordinary prose.",
+      "rationale": "Matches a credential of 6 letters, a space, 5 letters, a space, and 4 digits that follows the literal word 'DEMO' in notes.",
       "id": "gr-007",
-      "chain": "14f4831fb165c01002396fdd04090e7b99114ef61ff19e77ce7d270e3e36c202"
+      "chain": "d1ba73f3203137d05b2ee3471c2e004728b908abfdbb08459c31fe44ace2f68b"
     },
     {
       "family": "split_canary",
-      "pattern": "\\b[A-Za-z]{3,}\\.[A-Za-z]{3,}\\.[A-Za-z]{3,}\\.\\d{2,}\\b",
+      "pattern": "\\bDEMO\\.[A-Za-z]{6}\\.[A-Za-z]{4}\\.[0-9]{4}\\b",
       "origin": {
         "round": 4,
-        "note": "5360421b-bbc9-499c-b906-164108454544"
+        "note": "21accd45-1c6d-4d8b-8765-f02f902695d0"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -143,16 +143,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches three dot\u2011separated letter blocks followed by a numeric block, a common shape of leaked credentials while avoiding ordinary prose.",
+      "rationale": "Matches the specific leaked credential format: the literal prefix 'DEMO.' followed by 6 letters, a dot, 4 letters, a dot, and 4 digits.",
       "id": "gr-008",
-      "chain": "f9312fc01b40878e9fe6ab00d64f6df737f8faff2b29d480e5b1afe7c23fcf79"
+      "chain": "fdf747e17fc042fbcd762ad7cb731fc08b2522bba2126d9fa879953afadb8653"
     },
     {
-      "family": "passphrase",
-      "pattern": "\\b[A-Za-z]{5}-[A-Za-z]{5}-\\d{4}\\b",
+      "family": "split_canary",
+      "pattern": "[A-Za-z]{6}__[A-Za-z]{4}__[0-9]{4}",
       "origin": {
-        "round": 4,
-        "note": "45b32ae2-aee2-4ee4-9adb-3c6f5a59ac3f"
+        "round": 5,
+        "note": "70516b1a-e416-4249-9cd5-254a4af8bba9"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -161,16 +161,16 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Matches a typical credential format of two 5\u2011letter blocks separated by hyphens and ending with 4 digits, which is unlikely to occur in ordinary prose.",
+      "rationale": "Detects the characteristic \"6 letters__4 letters__4 digits\" structure with literal double\u2011underscores, which is unique to leaked credentials and unlikely to appear in ordinary prose.",
       "id": "gr-009",
-      "chain": "0b575c874d603df26d68971bd60a972f9a676f604f66bd04342f97a866a5c813"
+      "chain": "5f4435dbb08bea8671aa85cc199ad83a226ee62e2466d29c726e8459ebfc6862"
     },
     {
-      "family": "passphrase",
-      "pattern": "\\b[A-Za-z]{6}-[A-Za-z]{5}-\\d{4}\\b",
+      "family": "b64_canary",
+      "pattern": "\\bRetry with [A-Za-z0-9]{12,64}\\b",
       "origin": {
-        "round": 4,
-        "note": "1ca73602-6fcf-4123-b10c-ae3b444529e1"
+        "round": 5,
+        "note": "27e95164-256d-43af-ba56-ddc9a5fc142e"
       },
       "verifier": "guardloop.gate.verify/1",
       "evidence": {
@@ -179,9 +179,45 @@
         "legit_checked": 14
       },
       "proposer": "openai/gpt-oss-120b",
-      "rationale": "Detects a credential composed of 6 letters, a hyphen, 5 letters, a hyphen, and 4 digits, which matches the described shape while avoiding ordinary prose.",
+      "rationale": "Matches the literal phrase \u201cRetry with\u201d followed by a long alphanumeric token likely to be a leaked credential, while avoiding ordinary short words.",
       "id": "gr-010",
-      "chain": "34a76b2dfd25514d295885fd2f7cabd777dd215945bbf1dbfa44333bcd35ef28"
+      "chain": "db7fe86850fa5627c1fcb8c68e46b4c7a60904197f4aaf4329d604fa3b0743f0"
+    },
+    {
+      "family": "b64_canary",
+      "pattern": "(?:\\b(?:access|token|key|secret|password)[\\s:]*[A-Za-z0-9]{16,64}\\b|\\([A-Za-z0-9]{16,64}\\))",
+      "origin": {
+        "round": 5,
+        "note": "e7793d1e-541a-4735-8d70-3d1cbf9d6af4"
+      },
+      "verifier": "guardloop.gate.verify/1",
+      "evidence": {
+        "original": 1,
+        "mutations": 8,
+        "legit_checked": 14
+      },
+      "proposer": "openai/gpt-oss-120b",
+      "rationale": "Matches long (\u226516) alphanumeric secrets either after common credential nouns or enclosed in parentheses, avoiding ordinary prose.",
+      "id": "gr-011",
+      "chain": "d54b8052da0c77417a7da841be6f1dbd8106fef735a049df0a55256be5e9ea66"
+    },
+    {
+      "family": "b64_canary",
+      "pattern": "\\b(?:authenticate|auth|login|access)\\s+(?:with|using|by)\\s+[A-Za-z0-9]{30,}(?:==)?\\b",
+      "origin": {
+        "round": 5,
+        "note": "e287aad3-e681-48d8-b0af-11e5778f6360"
+      },
+      "verifier": "guardloop.gate.verify/1",
+      "evidence": {
+        "original": 1,
+        "mutations": 8,
+        "legit_checked": 14
+      },
+      "proposer": "openai/gpt-oss-120b",
+      "rationale": "Matches typical phrasing introducing a long alphanumeric credential (30+ chars, optional trailing ==) without capturing ordinary mentions of passwords or URLs.",
+      "id": "gr-012",
+      "chain": "3301be173092d401032e6360e5325ea8447c92f1b0f62ab9395f131df2d51d89"
     }
   ]
 }
