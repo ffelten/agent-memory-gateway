@@ -4,7 +4,7 @@ Read `docs/spec/agent-memory-gateway-design.md` and `docs/handoffs/` before work
 The user's current ownership update overrides the older spec table: **Florian owns Senso integration as well as agents/scenario**.
 
 - Ash/Codex: `gateway/`, `infra/`, `analytics/`, `tests/security/`, shared contract integration.
-- Florian/Claude: `adapters/senso_adapter.py`, `agents/`, `demo/`, scenario tests and presentation.
+- Florian/Claude: `adapters/senso_adapter.py`, `agents/`, `demo/`, `guardloop/`, scenario tests and presentation.
 - The Senso adapter executes inside the trusted gateway; ownership never grants demo agents backend credentials.
 - Preserve `agents/gateway_client.py` request formats. Real admission is asynchronous at the provider: poll status while INGESTING.
 - Never add a protection-disable request option to the gateway. The synthetic baseline is a separate trusted harness.

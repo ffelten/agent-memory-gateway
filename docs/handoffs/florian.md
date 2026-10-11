@@ -17,6 +17,7 @@ Updated 2026-10-11, after the hackathon. Everything below is on `main`.
 | `demo/mint_runs.py` | Trusted harness: mints three scoped runs into `.gateway-runs.env` |
 | `demo/crm_fixture.py` | Synthetic CRM fixture |
 | `demo/akash-demo.yaml`, `demo/DEPLOY.md` | Akash deployment of the demo page |
+| `guardloop/` | Self-improving guardrails: auditor sweeps Senso memory, AkashML proposes rules, gate verifies, pinned rule set ([doc](../guard-loop.md), [hook proposal for Ash](guard-loop-scanner-hook.md)) |
 | `contracts/fixtures.json` | Shared fixture manifest |
 
 ## How to run

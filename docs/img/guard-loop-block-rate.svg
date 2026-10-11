@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" width="720" height="340" role="img" aria-label="Line chart: share of leak attempts stopped at the door per round, with learned rules versus built-in scanner only">
+<title>Line chart: share of leak attempts stopped at the door per round, with learned rules versus built-in scanner only</title>
+<style>
+  .s { fill: #fcfcfb } .t1 { fill: #0b0b0b } .t2 { fill: #52514e } .mu { fill: #898781 }
+  .g { stroke: #e1e0d9 } .ax { stroke: #c3c2b7 } .on { stroke: #2a78d6; fill: #2a78d6 }
+  .off { stroke: #eb6834; fill: #eb6834 } .ring { stroke: #fcfcfb }
+  @media (prefers-color-scheme: dark) {
+    .s { fill: #1a1a19 } .t1 { fill: #f0efec } .t2 { fill: #c3c2b7 }
+    .g { stroke: #2c2c2a } .ax { stroke: #383835 } .on { stroke: #3987e5; fill: #3987e5 }
+    .off { stroke: #d95926; fill: #d95926 } .ring { stroke: #1a1a19 }
+  }
+  .ln { fill: none }
+  text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif }
+</style>
+<rect class="s" width="720" height="340" rx="10"/>
+<text class="t1" x="24" y="32" font-size="17" font-weight="600">Leaks stopped at the door</text>
+<text class="t2" x="24" y="54" font-size="13">Leaks found later in Senso by the auditor: 34 · benign notes blocked: 0 of 20</text>
+<rect class="on" x="24" y="67" width="12" height="12" rx="3" stroke="none"/>
+<text class="t2" x="42" y="77" font-size="12">With learned rules</text>
+<rect class="off" x="194" y="67" width="12" height="12" rx="3" stroke="none"/>
+<text class="t2" x="212" y="77" font-size="12">Built-in scanner only</text>
+<line class="g" x1="64" x2="586" y1="288.0" y2="288.0" stroke-width="1"/>
+<text class="mu" x="54" y="292.0" font-size="11" text-anchor="end">0%</text>
+<line class="g" x1="64" x2="586" y1="239.0" y2="239.0" stroke-width="1"/>
+<text class="mu" x="54" y="243.0" font-size="11" text-anchor="end">25%</text>
+<line class="g" x1="64" x2="586" y1="190.0" y2="190.0" stroke-width="1"/>
+<text class="mu" x="54" y="194.0" font-size="11" text-anchor="end">50%</text>
+<line class="g" x1="64" x2="586" y1="141.0" y2="141.0" stroke-width="1"/>
+<text class="mu" x="54" y="145.0" font-size="11" text-anchor="end">75%</text>
+<line class="g" x1="64" x2="586" y1="92.0" y2="92.0" stroke-width="1"/>
+<text class="mu" x="54" y="96.0" font-size="11" text-anchor="end">100%</text>
+<line class="ax" x1="64" x2="586" y1="288" y2="288" stroke-width="1"/>
+<text class="mu" x="64.0" y="308" font-size="11" text-anchor="middle">Round 1</text>
+<text class="mu" x="190.5" y="308" font-size="11" text-anchor="middle">Round 2</text>
+<text class="mu" x="317.0" y="308" font-size="11" text-anchor="middle">Round 3</text>
+<text class="mu" x="443.5" y="308" font-size="11" text-anchor="middle">Round 4</text>
+<text class="mu" x="570.0" y="308" font-size="11" text-anchor="middle">Round 5</text>
+<polyline class="off ln" points="64.0,222.7 190.5,248.8 317.0,260.0 443.5,263.5 570.0,263.5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle class="off ring" cx="64.0" cy="222.7" r="5" stroke-width="2"/>
+<circle class="off ring" cx="190.5" cy="248.8" r="5" stroke-width="2"/>
+<circle class="off ring" cx="317.0" cy="260.0" r="5" stroke-width="2"/>
+<circle class="off ring" cx="443.5" cy="263.5" r="5" stroke-width="2"/>
+<circle class="off ring" cx="570.0" cy="263.5" r="5" stroke-width="2"/>
+<polyline class="on ln" points="64.0,222.7 190.5,229.2 317.0,232.0 443.5,214.5 570.0,165.5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle class="on ring" cx="64.0" cy="222.7" r="5" stroke-width="2"/>
+<circle class="on ring" cx="190.5" cy="229.2" r="5" stroke-width="2"/>
+<circle class="on ring" cx="317.0" cy="232.0" r="5" stroke-width="2"/>
+<circle class="on ring" cx="443.5" cy="214.5" r="5" stroke-width="2"/>
+<circle class="on ring" cx="570.0" cy="165.5" r="5" stroke-width="2"/>
+<text class="t1" x="584.0" y="169.5" font-size="12" font-weight="600">62% <tspan class="t2" font-weight="400">Learned</tspan></text>
+<text class="t1" x="584.0" y="267.5" font-size="12" font-weight="600">12% <tspan class="t2" font-weight="400">Built-in</tspan></text>
+</svg>
