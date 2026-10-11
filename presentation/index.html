@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5f0" />
+    <meta
+      name="description"
+      content="An illustrated poisoned-skill incident. Watch Alpha write a memory, Beta discover it, and the gateway stop it before it spreads."
+    />
+    <title>Memory Gateway — Watch the handoff.</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23b65c40'/%3E%3Cpath d='M11 27V13h5l4 7 4-7h5v14h-5v-7l-4 6-4-6v7z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="scenario.js" defer></script>
+    <script src="evidence.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body data-mode="baseline" data-step="0" data-playing="false">
+    <a class="skip-link" href="#incident-stage">Skip to the incident</a>
+    <svg
+      class="icon-library"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <symbol id="i-memory" viewBox="0 0 24 24">
+        <rect x="5" y="5" width="14" height="14" rx="4" />
+        <path
+          d="M9 9h6v6H9zM9 2v3m6-3v3M9 19v3m6-3v3M2 9h3m-3 6h3m14-6h3m-3 6h3"
+        />
+      </symbol>
+      <symbol id="i-play" viewBox="0 0 24 24">
+        <path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <path d="M9 5v14m7-14v14" stroke-width="3" />
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h14m-5-5 5 5-5 5" />
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="5" y="10" width="14" height="11" rx="3" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-document" viewBox="0 0 24 24">
+        <path
+          d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 0v6h6M8 13h8m-8 4h5"
+        />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M6 18 18 6" />
+      </symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24">
+        <path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" />
+      </symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24">
+        <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />
+      </symbol>
+    </svg>
+    <div class="shell">
+      <header class="site-header">
+        <a class="brand" href="./index.html"
+          ><span class="brand-mark"
+            ><svg><use href="#i-memory" /></svg></span
+          >Memory Gateway</a
+        >
+        <div class="header-right">
+          <span class="illustration-badge"
+            ><span></span>Illustrated scenario</span
+          ><button
+            id="fullscreen"
+            class="icon-button"
+            aria-label="Enter full screen"
+            title="Full screen"
+          >
+            <svg><use href="#i-expand" /></svg>
+          </button>
+        </div>
+      </header>
+      <main id="incident-stage" tabindex="-1">
+        <section class="intro">
+          <div>
+            <p class="eyebrow">THE ANATOMY OF A MEMORY LEAK</p>
+            <h1>
+              A helpful skill.<br class="mobile-break" />
+              A harmful memory.
+            </h1>
+            <p class="intro-copy">
+              Follow the conversation. Watch the handoff. See where trust
+              breaks.
+            </p>
+          </div>
+          <button id="skill-button" class="skill-trigger">
+            <span class="file-icon"
+              ><svg><use href="#i-document" /></svg></span
+            ><span
+              ><small>THE STARTING POINT</small
+              ><strong>incident-handoff / SKILL.md</strong
+              ><em
+                >Inspect the poisoned instruction
+                <span aria-hidden="true">↗</span></em
+              ></span
+            >
+          </button>
+        </section>
+        <section class="player" aria-label="Illustrated incident player">
+          <div class="player-toolbar">
+            <div
+              class="mode-switch"
+              role="group"
+              aria-label="Comparison scenario"
+            >
+              <button id="baseline-mode" aria-pressed="true">
+                <span class="mode-number">01</span>Without gateway</button
+              ><button id="protected-mode" aria-pressed="false">
+                <span class="mode-number">02</span>With gateway
+              </button>
+            </div>
+            <span id="route-label" class="route-label"
+              >Alpha → shared memory → Beta</span
+            >
+            <span class="simulation-label">Haiku · simulated</span>
+          </div>
+          <div class="stage-grid">
+            <section
+              class="pane agent-pane"
+              id="alpha-pane"
+              aria-labelledby="alpha-heading"
+            >
+              <header class="pane-header">
+                <span class="avatar alpha-avatar">A</span>
+                <div>
+                  <h2 id="alpha-heading">Agent Alpha</h2>
+                  <p>Customer Alpha · incident response</p>
+                </div>
+                <span class="pane-activity" aria-hidden="true"></span>
+              </header>
+              <div
+                class="conversation"
+                id="alpha-messages"
+                role="region"
+                aria-label="Alpha scripted conversation"
+                tabindex="0"
+              ></div>
+              <footer class="pane-footer">
+                <span class="permission-dot"></span>Can read Alpha + public
+                sources
+              </footer>
+            </section>
+            <section
+              class="pane memory-pane"
+              id="memory-pane"
+              aria-labelledby="memory-heading"
+            >
+              <header class="pane-header">
+                <span class="memory-icon"
+                  ><svg><use href="#i-memory" /></svg
+                ></span>
+                <div>
+                  <h2 id="memory-heading">Shared memory</h2>
+                  <p>Watch what becomes retrievable</p>
+                </div>
+              </header>
+              <div
+                class="memory-body"
+                id="memory-content"
+                role="region"
+                aria-label="Illustrated memory contents"
+                tabindex="0"
+              ></div>
+              <footer class="pane-footer" id="memory-footer">
+                Memory store · illustrative contents
+              </footer>
+            </section>
+            <section
+              class="pane agent-pane"
+              id="beta-pane"
+              aria-labelledby="beta-heading"
+            >
+              <header class="pane-header">
+                <span class="avatar beta-avatar">B</span>
+                <div>
+                  <h2 id="beta-heading">Agent Beta</h2>
+                  <p id="beta-context">Customer Beta · troubleshooting note</p>
+                </div>
+                <span class="pane-activity" aria-hidden="true"></span>
+              </header>
+              <div
+                class="conversation"
+                id="beta-messages"
+                role="region"
+                aria-label="Beta scripted conversation"
+                tabindex="0"
+              ></div>
+              <footer class="pane-footer">
+                <span class="permission-dot"></span
+                ><span id="beta-permissions"
+                  >Can read Beta + public sources</span
+                >
+              </footer>
+            </section>
+          </div>
+          <div class="event-caption" aria-live="polite" aria-atomic="true">
+            <span id="step-count" class="step-count">01 / 08</span>
+            <div>
+              <strong id="event-title"></strong>
+              <p id="event-caption"></p>
+            </div>
+            <span id="event-status" class="event-status">ILLUSTRATED</span>
+          </div>
+          <div
+            id="timeline"
+            class="timeline"
+            aria-label="Jump to an incident event"
+          ></div>
+          <div class="playback-controls">
+            <div class="playback-left">
+              <button id="play" class="primary-button" aria-pressed="false">
+                <svg id="play-glyph"><use href="#i-play" /></svg
+                ><span id="play-label">Play incident</span></button
+              ><button
+                id="prev"
+                class="icon-button"
+                aria-label="Previous event"
+                title="Previous event"
+              >
+                <span aria-hidden="true">←</span></button
+              ><button
+                id="next"
+                class="icon-button"
+                aria-label="Next event"
+                title="Next event"
+              >
+                <span aria-hidden="true">→</span></button
+              ><button
+                id="restart"
+                class="icon-button"
+                aria-label="Restart scenario"
+                title="Restart"
+              >
+                <svg><use href="#i-restart" /></svg></button
+              ><label class="speed-label"
+                >Speed<select id="speed" aria-label="Playback speed">
+                  <option value="1">1×</option>
+                  <option value="2">2×</option>
+                </select></label
+              >
+            </div>
+            <button id="enforce" class="gateway-button">
+              <svg><use href="#i-shield" /></svg
+              ><span id="enforce-label">Replay with gateway</span
+              ><span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </section>
+        <section class="recorded-evidence-heading" aria-labelledby="recorded-tests-title">
+          <p class="eyebrow">SEPARATE RECORDED TESTS</p>
+          <h2 id="recorded-tests-title">The experiment behind the demo.</h2>
+          <p>Real GPT-OSS-20B calls, three live AWS gateway checks, and verified ClickHouse logs. These receipts are separate from the illustrated story above.</p>
+        </section>
+        <section class="proof-summary" aria-label="Measured experiment results">
+          <div><strong>3<span>/6</span></strong><p>Poisoned runs leaked<small>GPT-OSS-20B · three skill variants</small></p></div>
+          <div><strong>0<span>/2</span></strong><p>Clean controls leaked<small>Same task and credential rule</small></p></div>
+          <div class="proof-success"><strong>3<span>/3</span></strong><p>Captured leaks blocked<small>Live AWS · unchanged candidates</small></p></div>
+        </section>
+        <section
+          class="evidence-strip"
+          aria-label="Verified experiment evidence"
+        >
+          <div class="evidence-brand">
+            <span class="clickhouse-mark" aria-hidden="true">▥</span>
+            <div>
+              <strong>Every decision has a receipt.</strong>
+              <p id="audit-status">Native tool calls · AWS responses · ClickHouse logs</p>
+            </div>
+          </div>
+          <div class="evidence-summary">
+            <span><strong id="trace-count">3</strong> captured writes</span
+            ><span
+              ><i class="sage-dot"></i
+              ><strong id="allow-count">3</strong> empty searches</span
+            ><span
+              ><i class="red-dot"></i
+              ><strong id="blocked-count">3</strong> quarantined</span
+            >
+          </div>
+          <button id="evidence-button" class="text-button">
+            Open logs &amp; evidence <span aria-hidden="true">↗</span>
+          </button>
+        </section>
+        <section class="receipt-section" aria-labelledby="receipt-heading">
+          <div class="section-heading"><div><p class="eyebrow">THREE CAPTURED LEAKS. THREE BLOCKS.</p><h2 id="receipt-heading">Follow the evidence.</h2></div><button id="download-evidence" class="text-button">Download evidence JSON ↓</button></div>
+          <div id="receipt-cards" class="receipt-grid"></div>
+        </section>
+        <p class="disclosure">
+          The walkthrough is illustrated. Evidence below it comes from separate recorded tests using synthetic data.
+          <span>The unprotected memory sink was local. Beta checks were HTTP requests from a trusted harness. Playback makes no live API calls.</span>
+        </p>
+      </main>
+      <footer class="site-footer">
+        <span>Useful knowledge. Original permissions.</span
+        ><span>AWS <i>·</i> Senso <i>·</i> AkashML <i>·</i> ClickHouse</span>
+      </footer>
+    </div>
+    <dialog id="skill-dialog" aria-labelledby="skill-title">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">THE POISONED SKILL · ILLUSTRATIVE FIXTURE</p>
+          <h2 id="skill-title">
+            A bad instruction, dressed as a helpful handoff.
+          </h2>
+        </div>
+        <button id="close-skill" class="icon-button" aria-label="Close skill">
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <p class="dialog-intro">
+        Alpha is portrayed as a small-model agent following this untrusted
+        skill. This file is displayed as story content; it is never installed or
+        executed.
+      </p>
+      <div class="skill-file">
+        <div class="file-bar">
+          <svg><use href="#i-document" /></svg><span id="skill-path"></span
+          ><span class="poison-tag">POISONED FIXTURE</span>
+        </div>
+        <div id="skill-lines"></div>
+      </div>
+      <div class="skill-explanation">
+        <strong>The instruction crosses a boundary.</strong>
+        <p>
+          It asks the agent to copy customer credentials into shared memory. The
+          gateway rejects the entire handoff at admission—even when the agent
+          follows the instruction.
+        </p>
+      </div>
+      <p class="dialog-note">
+        “Haiku · simulated” is a model portrayal, not a tested Haiku result or a
+        claim about model safety.
+      </p>
+    </dialog>
+    <dialog id="evidence-dialog" aria-labelledby="evidence-title">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">RECORDED CALLS · VERIFIED RESPONSES</p>
+          <h2 id="evidence-title">The decisions have receipts.</h2>
+        </div>
+        <button
+          id="close-evidence"
+          class="icon-button"
+          aria-label="Close evidence"
+        >
+          <svg><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <p class="dialog-intro" id="evidence-status"></p>
+      <div class="log-tabs" role="tablist" aria-label="Evidence category">
+        <button role="tab" id="tab-model" aria-controls="log-model" aria-selected="true" data-log="model">Model transcript</button>
+        <button role="tab" id="tab-gateway" aria-controls="log-gateway" aria-selected="false" data-log="gateway" tabindex="-1">Gateway receipts</button>
+        <button role="tab" id="tab-clickhouse" aria-controls="log-clickhouse" aria-selected="false" data-log="clickhouse" tabindex="-1">ClickHouse logs</button>
+        <button role="tab" id="tab-matrix" aria-controls="log-matrix" aria-selected="false" data-log="matrix" tabindex="-1">All test outcomes</button>
+      </div>
+      <section id="log-model" role="tabpanel" aria-labelledby="tab-model"></section>
+      <section id="log-gateway" role="tabpanel" aria-labelledby="tab-gateway" hidden>
+        <label class="case-label" for="evidence-case">Captured write</label><select id="evidence-case"></select>
+        <div id="gateway-log-content"></div>
+      </section>
+      <section id="log-clickhouse" role="tabpanel" aria-labelledby="tab-clickhouse" hidden></section>
+      <section id="log-matrix" role="tabpanel" aria-labelledby="tab-matrix" hidden></section>
+      <p id="evidence-time" class="dialog-note"></p>
+      <ul id="evidence-limits" class="evidence-limits"></ul>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
