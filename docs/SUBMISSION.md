@@ -45,7 +45,7 @@ We demonstrate the same frozen input twice: without the gateway it causes a real
 
 ---
 
-## 3-minute video script (used for the demo video)
+## 3-minute video script
 
 Story order: the breach first, then the fix, then the architecture.
 
@@ -60,4 +60,4 @@ Story order: the breach first, then the fix, then the architecture.
 | 2:25–2:45 | Evidence: trace table / ClickHouse | "Every decision is recorded as metadata only in ClickHouse. No secrets, no queries, no tokens." |
 | 2:45–3:00 | Architecture line + conclusion | "AWS gateway, Senso memory, AkashML agents, ClickHouse audit, all running live. For these fixtures, the gateway blocks the credential-bearing write, enforces each customer's permissions on every read, and still lets a public-only agent publish useful, sourced work." |
 
-The terminal run of `demo/run_demo.py` against the AWS gateway served as B-roll for 1:30–2:05.
+The terminal run of `demo/run_demo.py` against the AWS gateway was the intended B-roll for 1:30–2:05.
