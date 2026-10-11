@@ -1,10 +1,10 @@
-"""Run Florian's client + minting harness against Ash's REAL gateway code, served locally.
+"""Run the demo client + minting harness against the REAL gateway code in gateway/, served locally.
 
-Starts gateway/local.py from Ash's worktree (env ASH_GATEWAY_DIR) with his in-memory Store, his
+Starts gateway/local.py from the repo root (override with env GATEWAY_DIR) with its in-memory Store,
 bootstrap.seed() sources, and the real policy service (real secret scanner, real run/ACL logic).
 The only stand-in is the PROVIDER (Senso): a tiny in-process double so APPROVED states can be
 reached; checks that depend on it are labelled [provider double, NOT Senso]. Prints PASS/FAIL/SKIP.
-Needs only the stdlib (Ash's local path imports no boto3).
+Needs only the stdlib (the local path imports no boto3).
 """
 import json
 import os
@@ -24,9 +24,7 @@ import agent_a, agent_b, bypass_attempt  # noqa: E402
 import mint_runs  # noqa: E402
 from gateway_client import GatewayClient  # noqa: E402
 
-ASH = pathlib.Path(os.environ.get(
-    "ASH_GATEWAY_DIR",
-    "/private/tmp/claude-501/-Users-florian-Documents-hackathon/6cd52517-dbe8-4086-aa49-6886834b967a/scratchpad/ash-gw"))
+ASH = pathlib.Path(os.environ.get("GATEWAY_DIR", str(ROOT)))
 
 LAUNCHER = r'''
 import hashlib, os, sys, threading
@@ -72,7 +70,7 @@ def check(name, cond, detail=""):
 
 def main():
     if not (ASH / "gateway" / "local.py").exists():
-        report("real gateway available", "SKIP", f"Ash's worktree not found at {ASH}; set ASH_GATEWAY_DIR")
+        report("real gateway available", "SKIP", f"gateway not found at {ASH}; set GATEWAY_DIR")
         return True
     admin = secrets.token_urlsafe(24)
     proc = subprocess.Popen([sys.executable, "-c", LAUNCHER], cwd=str(ASH), env={**os.environ, "ADMIN": admin},

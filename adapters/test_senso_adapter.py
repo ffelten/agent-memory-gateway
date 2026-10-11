@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import senso_adapter
 from senso_adapter import SensoAdapter
 
-ENV = "/Users/florian/Documents/hackathon/.env"
+ENV = os.environ.get("ENV_FILE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
 failed = []
 
 
