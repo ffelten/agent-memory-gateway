@@ -1,22 +1,20 @@
 # Submission — Agent Memory Gateway
 
-Submit at https://tokensand.com/cyberhack/submit before **4:30 PM PT**. Lines marked **[VERIFY]** must be confirmed true before pasting.
+Record of the Cyberhack SF submission (2026-10-09), submitted at https://tokensand.com/cyberhack/submit. Claims below were limited to what had been verified at submission time.
 
-## Form fields
+## Form fields (as submitted)
 
 **Project name:** Agent Memory Gateway
 
 **Repository:** https://github.com/ffelten/agent-memory-gateway
 
-**Demo video:** <shareable link after recording>
+**Live demo page:** http://67s3r5os51agp42v6tfsi3fhsc.ingress.zencloud.eu (hosted on Akash; may since have been closed)
 
-**Live demo page:** http://67s3r5os51agp42v6tfsi3fhsc.ingress.zencloud.eu (hosted on Akash)
+**Team:** Florian — florian@autom8.build · Ash
 
-**Team:** Florian — florian@autom8.build · Ash — <email>
+**Prizes entered:** Top overall (Pi) · Senso · ClickHouse · Akash
 
-**Prizes to select:** Top overall (Pi) · Senso · ClickHouse · Akash
-
-## What we built (paste)
+## What we built
 
 Agents now share memory across a company, and that memory leaks. An engineer's agent writes a handoff note for Customer Alpha. Buried in the copied incident context is Alpha's API credential. Another team's agent, working for Customer Beta, searches the shared memory, finds the credential, and can use it to read Alpha's private customer record. (In our demo, a controlled probe on Beta's side performs this step.)
 
@@ -30,7 +28,7 @@ Agent Memory Gateway sits in front of shared agent memory. Every write and read 
 
 We demonstrate the same frozen input twice: without the gateway it causes a real breach, and with the gateway it is quarantined while useful work continues.
 
-## How we used the sponsors (paste, keep honest)
+## How we used the sponsors
 
 - **Senso:** the shared company memory. Admitted knowledge is ingested and retrieved with scoped search (`require_scoped_ids`), and the gateway checks the provider version before returning text. Live ingest → ready → scoped retrieval → delete round trip verified.
 - **AkashML:** inference for both autonomous agents (`openai/gpt-oss-120b`). Real calls verified.
@@ -38,7 +36,7 @@ We demonstrate the same frozen input twice: without the gateway it causes a real
 - **ClickHouse:** metadata-only audit analytics (decision, reason, transport, latency). Verified end to end: all seven gateway traces from the final live demo run are present in ClickHouse with matching decisions and measured timings, delivered by the deployed gateway's analytics Lambda.
 - **AWS:** API Gateway + Lambda policy gateway, DynamoDB for authoritative state, Secrets Manager isolating every backend key from agents. Deployed and verified: the full demo passes all 10 acceptance checks against the live endpoint with real AkashML agents. Both sides use real Senso: the protected side through the gateway, and the unprotected breach baseline through a separate trusted harness with no admission check. The page reads each trace's timings back from ClickHouse (7 of 7 delivered).
 
-## Honest limits (for judges' questions)
+## Honest limits
 
 - Detection covers the named canary and common credential patterns, not every paraphrased, encoded or fragmented secret. Source permissions carry the main personal-data protection.
 - Script parity is demonstrated over HTTP: the agent client and a raw Python script get identical decisions. We have not yet verified the agents' runtime isolation (the claim that they cannot reach backend keys inside their own sandbox) or an actual MCP transport end to end.
@@ -62,4 +60,4 @@ Story order: the breach first, then the fix, then the architecture.
 | 2:25–2:45 | Evidence: trace table / ClickHouse | "Every decision is recorded as metadata only in ClickHouse. No secrets, no queries, no tokens." |
 | 2:45–3:00 | Architecture line + conclusion | "AWS gateway, Senso memory, AkashML agents, ClickHouse audit, all running live. For these fixtures, the gateway blocks the credential-bearing write, enforces each customer's permissions on every read, and still lets a public-only agent publish useful, sourced work." |
 
-**Recording tips:** record the terminal run of `demo/run_demo.py` against the AWS gateway as B-roll for 1:30–2:05. Pre-record the whole thing; don't depend on live network during the presentation.
+The terminal run of `demo/run_demo.py` against the AWS gateway was the intended B-roll for 1:30–2:05.

@@ -1,12 +1,12 @@
 # Handoff — Florian's lane (agents, demo, Senso adapter)
 
-Updated 2026-10-09, ~15:50 PT. Everything below is on `main`; no open PRs.
+Updated 2026-10-11, after the hackathon. Everything below is on `main`.
 
 ## Live artifacts
 - **Repo:** https://github.com/ffelten/agent-memory-gateway
-- **Demo page (Akash):** http://67s3r5os51agp42v6tfsi3fhsc.ingress.zencloud.eu, generated from the full live run (PR #15).
+- **Demo page (Akash, may be closed):** http://67s3r5os51agp42v6tfsi3fhsc.ingress.zencloud.eu, generated from the full live run (PR #15).
 - **Gateway (AWS, Ash):** https://yrx2yjzb7h.execute-api.us-east-1.amazonaws.com
-- **Submission draft:** `docs/SUBMISSION.md` (form text, sponsor lines, 3-minute video script).
+- **Submission record:** `docs/SUBMISSION.md` (what was submitted, sponsor usage, honest limits).
 
 ## What's in this lane
 | Path | What |
@@ -37,9 +37,9 @@ open demo/output/index.html
 Last verified on a clean checkout of `main`: contract suite pass, agent suite pass, gateway suite 228 passed / 1 skipped, Senso live pass, full live demo 10/10.
 
 ## Refresh the public page after a new run
-Commit `demo/output/index.html` to `main` through a PR, then restart the Akash container so it re-fetches the page:
+Commit `demo/output/index.html` to `main` through a PR, then restart the Akash container so it re-fetches the page (`AKASH_DSEQ` is the deployment sequence from the Akash Console, if the deployment is still open):
 ```bash
-curl -sX PATCH https://console-api.akash.network/v1/deployments/1791580242440 \
+curl -sX PATCH https://console-api.akash.network/v1/deployments/$AKASH_DSEQ \
   -H "x-api-key: $AKASH_API_KEY" -H "Content-Type: application/json" \
   -d '{"data":{"services":{"web":{"env":{"REV":"<next number>"}}}}}'
 ```
@@ -48,19 +48,10 @@ curl -sX PATCH https://console-api.akash.network/v1/deployments/1791580242440 \
 - `.env`: AkashML, Akash Console, Senso, ClickHouse credentials
 - `.gateway-admin.json`: gateway admin bearer (from Ash)
 - `.gateway-runs.env`: last minted run tokens
-- `~/Downloads/ash-gateway-credentials.env`: the copy shared with Ash; delete once he has loaded it
 
 ## Known limits
 - The demo runner's unprotected comparison runs against the local mock, and its output says so.
 - No in-browser live/visual view; the demo is the story page plus the terminal run.
-- The Senso key is a full-org CLI key that expires 2026-10-16.
-
-## Remaining
-| Item | Owner |
-|---|---|
-| Record the 3-minute video (script in `docs/SUBMISSION.md`) | Florian |
-| Add Ash's email to the form; submit at tokensand.com/cyberhack/submit before 4:30 PT | Florian + Ash |
-| Tick prizes: Top overall (Pi), Senso, ClickHouse, Akash | Florian |
-| Close the Akash deployment after judging (`DELETE /v1/deployments/1791580242440`) | Florian |
+- The Senso key is a full-org CLI key that expires 2026-10-16; rotate it after that date.
 
 No fresh run tokens are needed: the admin key is local and each live run mints its own.
